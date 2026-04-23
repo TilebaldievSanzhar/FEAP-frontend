@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Download, RefreshCcw } from "lucide-react";
+import { Activity, Download, RadioTower, RefreshCcw } from "lucide-react";
 
 import {
   Card,
@@ -17,17 +17,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { JobProgressBar } from "@/components/jobs/JobProgressBar";
 import { JobItemsList } from "@/components/jobs/JobItemsList";
 import { BatchAnswerDialog } from "@/components/jobs/BatchAnswerDialog";
+import { useJobLive } from "@/components/jobs/useJobLive";
 
-import {
-  useJob,
-  useJobBatchAnswer,
-  useJobItems,
-  useJobRetryFailed,
-} from "@/api/jobs";
+import { useJobBatchAnswer, useJobRetryFailed } from "@/api/jobs";
 import type { JobItem, JobItemStatus } from "@/api/types";
 import { parseApiError } from "@/lib/errors";
 import { downloadCsv, toCsv } from "@/lib/csv";
 import { formatRate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const CSV_COLUMNS = [
   "position",
@@ -71,22 +68,20 @@ function ResultsPage() {
   const [filter, setFilter] = useState<JobItemStatus | null>(null);
   const [answerOpen, setAnswerOpen] = useState(false);
 
-  const { data: job, isLoading: jobLoading, isError: jobError } = useJob(jobId);
-  const { data: itemsData, isLoading: itemsLoading } = useJobItems(
-    jobId,
-    filter ? { status: filter } : undefined,
-  );
+  const live = useJobLive(jobId, filter ? { filter: { status: filter } } : undefined);
+  const job = live.job;
+  const allItems = live.items;
+  const itemsLoading = live.itemsQuery.isLoading;
 
   const batchAnswer = useJobBatchAnswer(jobId);
   const retryFailed = useJobRetryFailed(jobId);
 
-  const allItems = itemsData?.items;
   const needsInputItems = useMemo(
     () => allItems?.filter((i) => i.status === "needs_input") ?? [],
     [allItems],
   );
 
-  if (jobLoading && !job) {
+  if (live.isLoading && !job) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-1/2" />
@@ -96,7 +91,7 @@ function ResultsPage() {
     );
   }
 
-  if (jobError || !job) {
+  if (live.isError || !job) {
     return (
       <Card>
         <CardHeader>
@@ -148,15 +143,45 @@ function ResultsPage() {
 
   const hasFailed = job.progress.failed > 0;
   const hasNeedsInput = needsInputItems.length > 0;
+  const liveBadge = (() => {
+    switch (live.liveStatus) {
+      case "open":
+        return { Icon: RadioTower, label: t("jobs.liveSse"), tone: "text-emerald-600" };
+      case "connecting":
+        return { Icon: RadioTower, label: t("jobs.liveConnecting"), tone: "text-muted-foreground" };
+      case "polling":
+        return { Icon: Activity, label: t("jobs.livePolling"), tone: "text-sky-600" };
+      case "closed":
+        return null;
+      default:
+        return null;
+    }
+  })();
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>{t("jobs.title")}</CardTitle>
-          <CardDescription>
-            {t("jobs.jobId")}: <span className="font-mono">{job.job_id}</span>
-          </CardDescription>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle>{t("jobs.title")}</CardTitle>
+              <CardDescription>
+                {t("jobs.jobId")}: <span className="font-mono">{job.job_id}</span>
+              </CardDescription>
+            </div>
+            {liveBadge ? (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs",
+                  liveBadge.tone,
+                )}
+                title={liveBadge.label}
+              >
+                <liveBadge.Icon className="h-3 w-3" aria-hidden />
+                {liveBadge.label}
+              </span>
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <JobProgressBar job={job} activeFilter={filter} onFilterChange={setFilter} />

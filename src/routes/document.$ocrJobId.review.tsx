@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -15,32 +15,37 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { OcrProgressPanel } from "@/components/document/OcrProgressPanel";
-import { ExtractedProductsList } from "@/components/document/ExtractedProductsList";
+import { ExtractedProductsTable } from "@/components/document/ExtractedProductsTable";
 
 import { useOcrJob } from "@/api/ocr";
 import { useClassifyBatch } from "@/api/jobs";
-import type { ProductCard } from "@/api/types";
+import { useDraftStore, type DraftProduct } from "@/stores/draft";
 import { useIdempotencyKey } from "@/hooks/useIdempotencyKey";
 import { parseApiError } from "@/lib/errors";
 
-function toBatchItems(products: ProductCard[]) {
+function toBatchItems(products: DraftProduct[]) {
   return products
     .filter((p) => !p.skipped && p.normalized_description?.trim())
-    .map((p, idx) => ({
-      description: p.normalized_description,
-      source_ref: { ocr_line_number: idx + 1 },
-      ...(p.country_of_origin || p.material || p.hs_code_hint
-        ? {
-            additional_info: Object.fromEntries(
-              Object.entries({
-                Страна: p.country_of_origin ?? undefined,
-                Материал: p.material ?? undefined,
-                Подсказка: p.hs_code_hint ?? undefined,
-              }).filter(([, v]) => v != null && v !== ""),
-            ) as Record<string, string>,
-          }
-        : {}),
-    }));
+    .map((p, idx) => {
+      const extra = Object.fromEntries(
+        Object.entries({
+          Страна: p.country_of_origin ?? undefined,
+          Материал: p.material ?? undefined,
+          Функция: p.function ?? undefined,
+          Количество:
+            p.quantity != null
+              ? `${p.quantity}${p.unit ? ` ${p.unit}` : ""}`
+              : undefined,
+          Подсказка: p.hs_code_hint ?? undefined,
+        }).filter(([, v]) => v != null && v !== ""),
+      ) as Record<string, string>;
+
+      return {
+        description: p.normalized_description,
+        source_ref: { ocr_line_number: idx + 1, draft_id: p.local_id },
+        ...(Object.keys(extra).length ? { additional_info: extra } : {}),
+      };
+    });
 }
 
 function ReviewPage() {
@@ -51,6 +56,18 @@ function ReviewPage() {
   const classifyBatch = useClassifyBatch();
   const idempotency = useIdempotencyKey();
 
+  const initDraft = useDraftStore((s) => s.initDraft);
+  const clearDraft = useDraftStore((s) => s.clearDraft);
+  const draft = useDraftStore((s) => s.byOcrJob[ocrJobId]);
+
+  const ocrProducts = ocrJob?.result?.products;
+
+  useEffect(() => {
+    if (ocrProducts && !draft) {
+      initDraft(ocrJobId, ocrProducts);
+    }
+  }, [ocrProducts, draft, ocrJobId, initDraft]);
+
   useEffect(() => {
     if (ocrJob?.linked_classification_job_id) {
       void navigate({
@@ -59,6 +76,12 @@ function ReviewPage() {
       });
     }
   }, [ocrJob?.linked_classification_job_id, navigate]);
+
+  const products = useMemo(() => draft?.current ?? [], [draft]);
+  const includedCount = useMemo(
+    () => products.filter((p) => !p.skipped).length,
+    [products],
+  );
 
   if (isLoading) {
     return (
@@ -85,11 +108,10 @@ function ReviewPage() {
     );
   }
 
-  const products = ocrJob.result?.products ?? [];
   const isDone = ocrJob.status === "completed";
 
   async function launchBatch() {
-    if (!products.length) return;
+    if (!includedCount) return;
     try {
       const res = await classifyBatch.mutateAsync({
         items: toBatchItems(products),
@@ -97,6 +119,7 @@ function ReviewPage() {
         idempotencyKey: idempotency.key,
       });
       idempotency.reset();
+      clearDraft(ocrJobId);
       void navigate({
         to: "/document/$jobId/results",
         params: { jobId: res.job_id },
@@ -132,23 +155,18 @@ function ReviewPage() {
               {products.length ? (
                 <Button
                   onClick={launchBatch}
-                  disabled={classifyBatch.isPending}
+                  disabled={classifyBatch.isPending || includedCount === 0}
                 >
                   {classifyBatch.isPending
                     ? t("actions.submitting")
-                    : t("document.launchBatch", {
-                        count: products.filter((p) => !p.skipped).length,
-                      })}
+                    : t("document.launchBatch", { count: includedCount })}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               ) : null}
             </div>
           </CardHeader>
           <CardContent>
-            <ExtractedProductsList
-              products={products}
-              skippedLines={ocrJob.result?.skipped_lines}
-            />
+            <ExtractedProductsTable ocrJobId={ocrJobId} products={products} />
           </CardContent>
         </Card>
       ) : null}

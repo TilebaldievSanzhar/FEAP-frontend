@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TnvedTreeRouteImport } from './routes/tnved.tree'
 import { Route as TnvedCodeRouteImport } from './routes/tnved.$code'
+import { Route as NtmVerifyRouteImport } from './routes/ntm.verify'
+import { Route as NtmLookupRouteImport } from './routes/ntm.lookup'
 import { Route as DocumentUploadRouteImport } from './routes/document.upload'
 import { Route as DocumentOcrJobIdReviewRouteImport } from './routes/document.$ocrJobId.review'
 import { Route as DocumentJobIdResultsRouteImport } from './routes/document.$jobId.results'
@@ -29,6 +31,16 @@ const TnvedTreeRoute = TnvedTreeRouteImport.update({
 const TnvedCodeRoute = TnvedCodeRouteImport.update({
   id: '/tnved/$code',
   path: '/tnved/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NtmVerifyRoute = NtmVerifyRouteImport.update({
+  id: '/ntm/verify',
+  path: '/ntm/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NtmLookupRoute = NtmLookupRouteImport.update({
+  id: '/ntm/lookup',
+  path: '/ntm/lookup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentUploadRoute = DocumentUploadRouteImport.update({
@@ -50,6 +62,8 @@ const DocumentJobIdResultsRoute = DocumentJobIdResultsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/document/upload': typeof DocumentUploadRoute
+  '/ntm/lookup': typeof NtmLookupRoute
+  '/ntm/verify': typeof NtmVerifyRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
   '/document/$jobId/results': typeof DocumentJobIdResultsRoute
@@ -58,6 +72,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/document/upload': typeof DocumentUploadRoute
+  '/ntm/lookup': typeof NtmLookupRoute
+  '/ntm/verify': typeof NtmVerifyRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
   '/document/$jobId/results': typeof DocumentJobIdResultsRoute
@@ -67,6 +83,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/document/upload': typeof DocumentUploadRoute
+  '/ntm/lookup': typeof NtmLookupRoute
+  '/ntm/verify': typeof NtmVerifyRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
   '/document/$jobId/results': typeof DocumentJobIdResultsRoute
@@ -77,6 +95,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/document/upload'
+    | '/ntm/lookup'
+    | '/ntm/verify'
     | '/tnved/$code'
     | '/tnved/tree'
     | '/document/$jobId/results'
@@ -85,6 +105,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/document/upload'
+    | '/ntm/lookup'
+    | '/ntm/verify'
     | '/tnved/$code'
     | '/tnved/tree'
     | '/document/$jobId/results'
@@ -93,6 +115,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/document/upload'
+    | '/ntm/lookup'
+    | '/ntm/verify'
     | '/tnved/$code'
     | '/tnved/tree'
     | '/document/$jobId/results'
@@ -102,6 +126,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DocumentUploadRoute: typeof DocumentUploadRoute
+  NtmLookupRoute: typeof NtmLookupRoute
+  NtmVerifyRoute: typeof NtmVerifyRoute
   TnvedCodeRoute: typeof TnvedCodeRoute
   TnvedTreeRoute: typeof TnvedTreeRoute
   DocumentJobIdResultsRoute: typeof DocumentJobIdResultsRoute
@@ -131,6 +157,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TnvedCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ntm/verify': {
+      id: '/ntm/verify'
+      path: '/ntm/verify'
+      fullPath: '/ntm/verify'
+      preLoaderRoute: typeof NtmVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ntm/lookup': {
+      id: '/ntm/lookup'
+      path: '/ntm/lookup'
+      fullPath: '/ntm/lookup'
+      preLoaderRoute: typeof NtmLookupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/document/upload': {
       id: '/document/upload'
       path: '/document/upload'
@@ -158,6 +198,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DocumentUploadRoute: DocumentUploadRoute,
+  NtmLookupRoute: NtmLookupRoute,
+  NtmVerifyRoute: NtmVerifyRoute,
   TnvedCodeRoute: TnvedCodeRoute,
   TnvedTreeRoute: TnvedTreeRoute,
   DocumentJobIdResultsRoute: DocumentJobIdResultsRoute,

@@ -53,6 +53,13 @@ function Header() {
           >
             {t("app.navTree")}
           </Link>
+          <Link
+            to="/ntm/verify"
+            activeProps={{ className: "text-foreground font-medium" }}
+            inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
+          >
+            {t("app.navNtm")}
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">

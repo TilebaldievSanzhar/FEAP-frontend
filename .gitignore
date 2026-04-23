@@ -17,5 +17,5 @@ coverage
 .vitest-cache
 
 
-docs/async_architectures.md
+docs/async_architecture.md
 docs/ocr_integration.md

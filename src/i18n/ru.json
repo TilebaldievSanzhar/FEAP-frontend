@@ -5,7 +5,8 @@
     "navClassify": "Классификация",
     "navDocument": "Документы",
     "navTree": "Дерево ТН ВЭД",
-    "navLookup": "Поиск по коду"
+    "navLookup": "Поиск по коду",
+    "navNtm": "Меры НТР"
   },
   "classify": {
     "title": "Классификация одного товара",
@@ -91,10 +92,23 @@
     "totalCount": "Всего: {{total}} (включено: {{included}}, пропущено: {{skipped}})",
     "col": {
       "description": "Описание",
+      "material": "Материал",
+      "function": "Назначение",
       "quantity": "Кол-во",
       "country": "Страна",
-      "hint": "Подсказка"
-    }
+      "hint": "Подсказка",
+      "actions": "Действия"
+    },
+    "unitPlaceholder": "шт",
+    "skipRow": "Пропустить строку",
+    "restoreRow": "Восстановить строку",
+    "duplicateRow": "Дублировать строку",
+    "bulkCountryLabel": "Страна происхождения — всем включённым",
+    "bulkCountryPlaceholder": "Например: КНР",
+    "bulkCountryApply": "Применить ко всем",
+    "draftDirty": "Изменено: {{changed}}, удалено: {{removed}}, добавлено: {{added}}",
+    "resetDraft": "Сбросить правки",
+    "rawRow": "Исходная строка OCR"
   },
   "jobs": {
     "title": "Классификация товаров",
@@ -113,8 +127,34 @@
     "batchAnswerDescription": "Заполните значения и отправьте одним запросом.",
     "submitAllAnswers": "Отправить все ответы",
     "answersSent": "Ответы отправлены",
+    "liveSse": "Live (SSE)",
+    "liveConnecting": "Подключение…",
+    "livePolling": "Опрос",
     "item": {
       "needsInputTitle": "Требуются уточнения"
+    }
+  },
+  "ntm": {
+    "lookupTitle": "Справка по мерам НТР",
+    "lookupDescription": "Введите код ТН ВЭД, чтобы получить применимые нетарифные меры.",
+    "lookupSubmit": "Найти",
+    "measuresFor": "Меры для этого кода",
+    "verifyTitle": "Верификация мер НТР",
+    "verifyDescription": "Проверка соответствия мер конкретному товару по его описанию.",
+    "verifyResultTitle": "Результат верификации",
+    "verifyResultCount": "Проверено мер: {{count}}",
+    "codeLabel": "Код ТН ВЭД",
+    "codePlaceholder": "Например: 8509800000",
+    "codeError": "Введите минимум 2 цифры",
+    "descriptionLabel": "Описание товара",
+    "descriptionPlaceholder": "Укажите характеристики, материал, назначение…",
+    "descriptionError": "Минимум 3 символа",
+    "submit": "Проверить",
+    "reasoning": "Обоснование",
+    "status": {
+      "applies": "Применяется",
+      "does_not_apply": "Не применяется",
+      "uncertain": "Требует проверки"
     }
   },
   "actions": {
