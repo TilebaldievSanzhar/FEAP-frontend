@@ -1,0 +1,151 @@
+{
+  "app": {
+    "title": "FEAP",
+    "subtitle": "Классификатор ТН ВЭД",
+    "navClassify": "Классификация",
+    "navDocument": "Документы",
+    "navTree": "Дерево ТН ВЭД",
+    "navLookup": "Поиск по коду"
+  },
+  "classify": {
+    "title": "Классификация одного товара",
+    "descriptionLabel": "Описание товара",
+    "descriptionPlaceholder": "Например: Электрическая зубная щётка Oral-B Pro 3 с ионной очисткой…",
+    "submit": "Классифицировать",
+    "additionalInfo": "Дополнительные параметры",
+    "addParameter": "Добавить параметр",
+    "keyPlaceholder": "Параметр (например, материал)",
+    "valuePlaceholder": "Значение"
+  },
+  "result": {
+    "chain": "Цепочка решений",
+    "duty": "Пошлина (ЕТТ)",
+    "vat": "НДС",
+    "excise": "Акциз",
+    "confidence": "Уверенность",
+    "opi": "ОПИ",
+    "requiresReview": "Требуется проверка эксперта"
+  },
+  "needsInput": {
+    "title": "Нужны уточнения",
+    "description": "Использовано попыток: {{used}} из {{limit}}",
+    "chainSoFar": "Что уже определено",
+    "questions": "Уточните параметры",
+    "freeComment": "Свободный комментарий",
+    "limitReached": "Лимит уточнений исчерпан. Опишите товар подробнее и начните заново."
+  },
+  "tree": {
+    "title": "Дерево ТН ВЭД",
+    "description": "Навигация по разделам и подгруппам",
+    "empty": "Нет потомков",
+    "loading": "Загрузка…",
+    "lookupPlaceholder": "Введите код (например, 8509)",
+    "open": "Открыть"
+  },
+  "code": {
+    "title": "Код {{code}}",
+    "notFound": "Код не найден",
+    "ratesTitle": "Ставки",
+    "ntmTitle": "Меры НТР",
+    "ntmEmpty": "Мер НТР не найдено",
+    "ntmCountries": "Страны"
+  },
+  "document": {
+    "uploadTitle": "Загрузка документа",
+    "uploadDescription": "Инвойс, спецификация или контракт. OCR распознаёт позиции, затем запускается классификация.",
+    "uploadSubmit": "Загрузить",
+    "backToUpload": "Вернуться к загрузке",
+    "dropzoneClick": "Нажмите, чтобы выбрать файл",
+    "dropzoneOr": "или перетащите сюда",
+    "dropzoneHint": "PDF или изображение, до {{max}} МБ",
+    "errorTooLarge": "Файл больше допустимого лимита ({{max}} МБ)",
+    "errorType": "Неподдерживаемый формат файла",
+    "typeLabel": "Тип документа",
+    "type": {
+      "unknown": "Определить автоматически",
+      "invoice": "Инвойс",
+      "customs": "Таможенная декларация",
+      "specification": "Спецификация",
+      "contract": "Контракт"
+    },
+    "autoClassify": "Автоматически классифицировать после OCR",
+    "autoClassifyHint": "Без ручной проверки извлечённых позиций.",
+    "ocrTitle": "OCR обрабатывает документ",
+    "ocrFailed": "OCR завершился с ошибкой",
+    "ocrJobId": "OCR-задача",
+    "reviewTitle": "Разбор документа",
+    "extractedTitle": "Извлечённые позиции",
+    "extractedDescription": "Запустите классификацию для всех включённых позиций.",
+    "launchBatch": "Классифицировать ({{count}})",
+    "stageOf": "Этап {{index}} / {{total}}",
+    "stage": {
+      "pending": "В очереди",
+      "uploading": "Загрузка",
+      "ocr_processing": "Распознавание",
+      "extracting": "Извлечение карточек",
+      "completed": "Готово",
+      "failed": "Ошибка",
+      "cancelled": "Отменено"
+    },
+    "empty": "В документе не найдено товарных позиций",
+    "totalCount": "Всего: {{total}} (включено: {{included}}, пропущено: {{skipped}})",
+    "col": {
+      "description": "Описание",
+      "quantity": "Кол-во",
+      "country": "Страна",
+      "hint": "Подсказка"
+    }
+  },
+  "jobs": {
+    "title": "Классификация товаров",
+    "jobId": "Задача",
+    "progressTitle": "Прогресс",
+    "empty": "Пока нет обработанных позиций",
+    "emptyFiltered": "Нет позиций с таким статусом",
+    "clearFilter": "Сбросить фильтр",
+    "openBatchAnswer": "Ответить на уточнения ({{count}})",
+    "retryFailed": "Повторить упавшие ({{count}})",
+    "retryQueued": "Повторный запуск поставлен в очередь",
+    "newJobCreated": "Создана новая задача",
+    "exportCsv": "Экспорт в CSV",
+    "exportEmpty": "Нет данных для экспорта",
+    "batchAnswerTitle": "Уточнения по {{count}} позициям",
+    "batchAnswerDescription": "Заполните значения и отправьте одним запросом.",
+    "submitAllAnswers": "Отправить все ответы",
+    "answersSent": "Ответы отправлены",
+    "item": {
+      "needsInputTitle": "Требуются уточнения"
+    }
+  },
+  "actions": {
+    "copy": "Копировать",
+    "copied": "Скопировано",
+    "copyCode": "Скопировать код",
+    "openInTree": "Открыть в дереве",
+    "submitAnswers": "Отправить ответы",
+    "submitting": "Отправка…",
+    "cancel": "Отмена",
+    "reset": "Сбросить",
+    "remove": "Удалить",
+    "expand": "Развернуть",
+    "collapse": "Свернуть"
+  },
+  "status": {
+    "pending": "В очереди",
+    "running": "В работе",
+    "completed": "Готово",
+    "needs_input": "Нужны уточнения",
+    "partial": "Частично",
+    "failed": "Ошибка",
+    "cancelled": "Отменено"
+  },
+  "errors": {
+    "generic": "Что-то пошло не так. Попробуйте повторить запрос."
+  },
+  "header": {
+    "theme": "Тема",
+    "themeLight": "Светлая",
+    "themeDark": "Тёмная",
+    "themeSystem": "Системная"
+  }
+}

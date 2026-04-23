@@ -1,0 +1,8 @@
+{
+  "apiBaseUrl": "http://localhost:8000",
+  "sseEnabled": true,
+  "ocrMaxFileMb": 25,
+  "batchSyncMax": 5,
+  "defaultLocale": "ru",
+  "buildVersion": "dev"
+}
