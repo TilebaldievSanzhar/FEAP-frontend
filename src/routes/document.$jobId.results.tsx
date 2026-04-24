@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Activity, Download, RadioTower, RefreshCcw } from "lucide-react";
+import { Activity, Download, RadioTower } from "lucide-react";
 
 import {
   Card,
@@ -19,7 +19,7 @@ import { JobItemsList } from "@/components/jobs/JobItemsList";
 import { BatchAnswerDialog } from "@/components/jobs/BatchAnswerDialog";
 import { useJobLive } from "@/components/jobs/useJobLive";
 
-import { useJobBatchAnswer, useJobRetryFailed } from "@/api/jobs";
+import { useJobBatchAnswer } from "@/api/jobs";
 import type { JobItem, JobItemStatus } from "@/api/types";
 import { parseApiError } from "@/lib/errors";
 import { downloadCsv, toCsv } from "@/lib/csv";
@@ -74,7 +74,6 @@ function ResultsPage() {
   const itemsLoading = live.itemsQuery.isLoading;
 
   const batchAnswer = useJobBatchAnswer(jobId);
-  const retryFailed = useJobRetryFailed(jobId);
 
   const needsInputItems = useMemo(
     () => allItems?.filter((i) => i.status === "needs_input") ?? [],
@@ -119,19 +118,6 @@ function ResultsPage() {
     }
   }
 
-  async function onRetryFailed() {
-    try {
-      const res = await retryFailed.mutateAsync();
-      toast.success(t("jobs.retryQueued"));
-      if (res?.job_id && res.job_id !== jobId) {
-        toast.message(t("jobs.newJobCreated"), { description: res.job_id });
-      }
-    } catch (err) {
-      const parsed = parseApiError(err);
-      toast.error(parsed.message);
-    }
-  }
-
   function onExport() {
     const rows = buildCsvRows(allItems ?? []);
     if (!rows.length) {
@@ -141,7 +127,6 @@ function ResultsPage() {
     downloadCsv(`job-${jobId}.csv`, toCsv(rows, CSV_COLUMNS));
   }
 
-  const hasFailed = job.progress.failed > 0;
   const hasNeedsInput = needsInputItems.length > 0;
   const liveBadge = (() => {
     switch (live.liveStatus) {
@@ -190,16 +175,6 @@ function ResultsPage() {
             {hasNeedsInput ? (
               <Button onClick={() => setAnswerOpen(true)} disabled={batchAnswer.isPending}>
                 {t("jobs.openBatchAnswer", { count: needsInputItems.length })}
-              </Button>
-            ) : null}
-            {hasFailed ? (
-              <Button
-                variant="outline"
-                onClick={onRetryFailed}
-                disabled={retryFailed.isPending}
-              >
-                <RefreshCcw className="h-4 w-4" />
-                {t("jobs.retryFailed", { count: job.progress.failed })}
               </Button>
             ) : null}
             <Button

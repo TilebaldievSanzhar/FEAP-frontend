@@ -7,6 +7,7 @@ import "./styles/globals.css";
 import { routeTree } from "./routeTree.gen";
 import { loadRuntimeConfig } from "./lib/config";
 import { initI18n } from "./i18n";
+import { useUiStore } from "./stores/ui";
 
 const router = createRouter({
   routeTree,
@@ -34,7 +35,13 @@ const queryClient = new QueryClient({
 
 async function bootstrap() {
   const config = await loadRuntimeConfig();
-  initI18n(config.defaultLocale);
+  // Prefer previously-selected locale from persisted UI store; fall back to runtime config.
+  const savedLocale = useUiStore.getState().locale;
+  const initialLocale = savedLocale ?? config.defaultLocale;
+  initI18n(initialLocale);
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = initialLocale;
+  }
 
   const root = document.getElementById("root");
   if (!root) throw new Error("#root not found");

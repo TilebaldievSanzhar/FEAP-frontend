@@ -1,8 +1,8 @@
 /**
- * Hand-written stand-in for the FastAPI-generated types.
- * Replace with `npm run api:generate` output once the backend `/openapi.json` is reachable.
- *
- * Shapes are derived from frontend_spec.md, async_architecture.md, ocr_integration.md.
+ * Internal, UI-facing normalized model.
+ * The live backend shapes live in `types.generated.ts` (openapi-typescript output).
+ * Adapters in `./classify.ts`, `./tnved.ts`, `./ntm.ts`, `./ocr.ts`, `./jobs.ts`
+ * translate between the two so components stay decoupled from wire changes.
  */
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -11,11 +11,14 @@
 
 export type ClassificationStatus = "completed" | "needs_input" | "error";
 
+/** One step in the decision chain (section → group → position → subposition → code_10). */
 export interface ClassificationChainStep {
-  level: string; // "section" | "group" | "position" | "subposition" | "code_10" | custom
+  /** UI-friendly tag: "section" | "group" | "position" | "subposition" | "code_10" or free-form. */
+  level: string;
   code: string;
   name?: string;
   reasoning?: string | null;
+  confidence?: number | null;
 }
 
 export interface ClassificationResult {
@@ -30,6 +33,8 @@ export interface ClassificationResult {
   risk_flags: string[];
   requires_human_review: boolean;
   opi_applied: string[];
+  precedent_match?: boolean;
+  precedent_codes?: string[];
 }
 
 export interface PartialResult {
@@ -39,11 +44,6 @@ export interface PartialResult {
   classification_chain_so_far: ClassificationChainStep[];
 }
 
-export interface ClassifyAdditionalInfoItem {
-  key: string;
-  value: string;
-}
-
 export interface ClassifyRequest {
   description: string;
   additional_info?: Record<string, string>;
@@ -51,6 +51,7 @@ export interface ClassifyRequest {
 
 export interface ClassifyCompleted {
   status: "completed";
+  session_id?: string | null;
   result: ClassificationResult;
 }
 
@@ -81,47 +82,64 @@ export interface TnvedNode {
   code: string;
   code_formatted?: string;
   name: string;
+  /** UI tag derived from numeric backend level. */
   level: string;
   has_children: boolean;
   parent_code?: string | null;
+  duty_rate?: string | null;
 }
 
+/** Result of GET /api/v1/tnved/lookup/{code}. */
 export interface TnvedCodeInfo {
   code: string;
   code_formatted: string;
   name: string;
-  level: string;
+  /** Intentionally free-form: backend gives no chain for lookup, so often empty. */
   chain: ClassificationChainStep[];
-  duty_rate?: number | string | null;
-  vat_rate?: number | string | null;
-  excise_rate?: number | string | null;
+  duty_rate?: string | null;
+  vat_rate?: string | null;
+  excise_rate?: string | null;
+  unit_primary?: string | null;
+  unit_secondary?: string | null;
   ntm_measures?: NtmMeasure[];
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// NTM
+// NTM — aligned with backend NtmMeasureInfo / NtmVerifiedMeasure
 // ────────────────────────────────────────────────────────────────────────────
 
+export type NtmApplyStatus =
+  | "applies"
+  | "does_not_apply"
+  | "uncertain"
+  | "may_apply"
+  | "informational";
+
 export interface NtmMeasure {
+  /** Synthetic id for React keys — we derive it from (kind + name + scope). */
   id: string;
-  code: string;
-  type: string;
-  title: string;
-  description?: string;
-  source?: string;
-  countries?: string[];
+  measure_type: string;
+  measure_type_kind: number;
+  name: string;
+  qualifier?: string | null;
+  legal_basis?: string | null;
+  note?: string | null;
+  scope: string;
+  valid_to?: string | null;
+  /** For lookup: may_apply | applies | informational. */
+  status?: NtmApplyStatus;
 }
 
 export interface NtmVerifiedMeasure extends NtmMeasure {
-  status: "applies" | "does_not_apply" | "uncertain";
-  reasoning: string;
+  status: NtmApplyStatus;
+  reasoning?: string | null;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
 // Jobs (async batch)
 // ────────────────────────────────────────────────────────────────────────────
 
-export type JobType = "classify_batch" | "ocr" | "ocr_classify";
+export type JobType = "classify_batch" | "ocr" | "ocr_classify" | string;
 export type JobStatus =
   | "pending"
   | "running"
@@ -138,6 +156,7 @@ export interface JobProgress {
   needs_input: number;
   running: number;
   pending: number;
+  cancelled?: number;
 }
 
 export interface Job {
@@ -187,13 +206,13 @@ export interface BatchRequest {
 // OCR
 // ────────────────────────────────────────────────────────────────────────────
 
+/** UI label for the document type selector. Backend does not persist this. */
 export type DocumentType = "invoice" | "customs" | "specification" | "contract" | "unknown";
 
 export type OcrStatus =
   | "pending"
-  | "uploading"
-  | "ocr_processing"
   | "extracting"
+  | "structuring"
   | "completed"
   | "failed"
   | "cancelled";
@@ -205,6 +224,10 @@ export interface OcrProgress {
   message?: string;
 }
 
+/**
+ * UI-facing flat product card. Draft-store works in this shape;
+ * the OCR adapter folds `StructuredProduct.product_card` and `source_ref` together.
+ */
 export interface ProductCard {
   normalized_description: string;
   material?: string | null;
@@ -220,7 +243,8 @@ export interface ProductCard {
 export interface OcrJob {
   ocr_job_id: string;
   status: OcrStatus;
-  document_type?: DocumentType;
+  stage?: string | null;
+  auto_classify?: boolean;
   progress?: OcrProgress;
   result?: {
     ocr_data: Record<string, unknown>;

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { NtmMeasureCard } from "@/components/ntm/NtmMeasureCard";
 import type { NtmMeasure } from "@/api/types";
 
 interface Props {
@@ -28,21 +28,7 @@ export function NtmSummaryCard({ measures }: Props) {
       </CardHeader>
       <CardContent className="space-y-2">
         {measures.map((m) => (
-          <div key={m.id} className="rounded-md border p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="info">{m.type}</Badge>
-              <span className="font-mono text-sm">{m.code}</span>
-              <span className="font-medium">{m.title}</span>
-            </div>
-            {m.description ? (
-              <p className="mt-1 text-sm text-muted-foreground">{m.description}</p>
-            ) : null}
-            {m.countries?.length ? (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t("code.ntmCountries")}: {m.countries.join(", ")}
-              </p>
-            ) : null}
-          </div>
+          <NtmMeasureCard key={m.id} measure={m} />
         ))}
       </CardContent>
     </Card>

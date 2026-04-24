@@ -81,9 +81,8 @@
     "stageOf": "Этап {{index}} / {{total}}",
     "stage": {
       "pending": "В очереди",
-      "uploading": "Загрузка",
-      "ocr_processing": "Распознавание",
-      "extracting": "Извлечение карточек",
+      "extracting": "Распознавание",
+      "structuring": "Извлечение карточек",
       "completed": "Готово",
       "failed": "Ошибка",
       "cancelled": "Отменено"
@@ -151,10 +150,13 @@
     "descriptionError": "Минимум 3 символа",
     "submit": "Проверить",
     "reasoning": "Обоснование",
+    "legalBasis": "Основание",
     "status": {
       "applies": "Применяется",
       "does_not_apply": "Не применяется",
-      "uncertain": "Требует проверки"
+      "uncertain": "Требует проверки",
+      "may_apply": "Возможно применяется",
+      "informational": "Справочно"
     }
   },
   "actions": {
@@ -186,6 +188,10 @@
     "theme": "Тема",
     "themeLight": "Светлая",
     "themeDark": "Тёмная",
-    "themeSystem": "Системная"
+    "themeSystem": "Системная",
+    "language": "Язык",
+    "langRu": "Русский",
+    "langKy": "Кыргызча",
+    "skipToContent": "Перейти к содержимому"
   }
 }

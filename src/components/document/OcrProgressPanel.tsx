@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import type { OcrJob, OcrStatus } from "@/api/types";
 import { cn } from "@/lib/utils";
 
-const ORDER: OcrStatus[] = ["uploading", "ocr_processing", "extracting", "completed"];
+const ORDER: OcrStatus[] = ["pending", "extracting", "structuring", "completed"];
 
 interface Props {
   job: OcrJob;
@@ -19,9 +19,17 @@ export function OcrProgressPanel({ job }: Props) {
   const pct = Math.min(100, Math.round((index / total) * 100));
 
   const failed = job.status === "failed" || job.status === "cancelled";
+  const liveMessage = failed
+    ? job.error ?? t("document.ocrFailed")
+    : job.progress?.message ?? t(`document.stage.${stageKey}`);
 
   return (
-    <div className="space-y-3 rounded-md border p-4">
+    <div
+      className="space-y-3 rounded-md border p-4"
+      role="status"
+      aria-live="polite"
+      aria-busy={!failed && job.status !== "completed"}
+    >
       <div className="flex items-start gap-3">
         {failed ? (
           <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden />
@@ -34,9 +42,7 @@ export function OcrProgressPanel({ job }: Props) {
           <div className="font-medium">
             {failed ? t("document.ocrFailed") : t("document.ocrTitle")}
           </div>
-          <div className="text-sm text-muted-foreground">
-            {job.progress?.message ?? t(`document.stage.${stageKey}`)}
-          </div>
+          <div className="text-sm text-muted-foreground">{liveMessage}</div>
           {job.error ? (
             <div className="mt-1 text-sm text-destructive">{job.error}</div>
           ) : null}
@@ -46,7 +52,7 @@ export function OcrProgressPanel({ job }: Props) {
         </div>
       </div>
 
-      <Progress value={pct} />
+      <Progress value={pct} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} />
 
       <ol className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
         {ORDER.map((stage, i) => (

@@ -1,8 +1,11 @@
 import { getConfig } from "@/lib/config";
+import { getAuthToken, onUnauthorized } from "./auth";
 
 export interface ApiRequestInit extends Omit<RequestInit, "body"> {
   body?: unknown;
   idempotencyKey?: string;
+  /** Opt out of Authorization header for a specific call. */
+  anonymous?: boolean;
 }
 
 export class ApiError extends Error {
@@ -24,6 +27,10 @@ function extractMessage(payload: unknown): string | undefined {
   const p = payload as Record<string, unknown>;
   if (typeof p.detail === "string") return p.detail;
   if (typeof p.message === "string") return p.message;
+  if (Array.isArray(p.detail)) {
+    const first = p.detail[0] as { msg?: string } | undefined;
+    if (first?.msg) return first.msg;
+  }
   return undefined;
 }
 
@@ -32,6 +39,13 @@ export async function apiFetch<T = unknown>(path: string, init: ApiRequestInit =
   const url = `${apiBaseUrl}${path}`;
   const headers = new Headers(init.headers);
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
+
+  if (!init.anonymous) {
+    const token = getAuthToken();
+    if (token && !headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
 
   let body: BodyInit | undefined;
   if (init.body instanceof FormData) {
@@ -55,6 +69,7 @@ export async function apiFetch<T = unknown>(path: string, init: ApiRequestInit =
     } catch {
       payload = await res.text().catch(() => null);
     }
+    if (res.status === 401) onUnauthorized();
     throw new ApiError(res.status, payload, requestId);
   }
 

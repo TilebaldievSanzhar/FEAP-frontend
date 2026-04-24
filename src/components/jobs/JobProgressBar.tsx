@@ -64,8 +64,10 @@ export function JobProgressBar({ job, activeFilter, onFilterChange }: Props) {
   const done = progress.completed + progress.failed + progress.needs_input;
   const pct = Math.min(100, Math.round((done / total) * 100));
 
+  const isTerminal = ["completed", "partial", "failed", "cancelled"].includes(job.status);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="status" aria-live="polite" aria-busy={!isTerminal}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{t("jobs.progressTitle")}</span>
@@ -76,7 +78,7 @@ export function JobProgressBar({ job, activeFilter, onFilterChange }: Props) {
         </div>
       </div>
 
-      <Progress value={pct} />
+      <Progress value={pct} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} />
 
       <div className="flex flex-wrap gap-2">
         {CHIPS.map(({ key, status, i18nKey, Icon, className }) => {

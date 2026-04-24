@@ -1,12 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "./client";
-import type { DocumentType, OcrJob, OcrStatus } from "./types";
+import { adaptOcrJob } from "./adapters";
+import type { components } from "./types.generated";
+import type { OcrJob, OcrStatus } from "./types";
+
+type BackendOcrJob = components["schemas"]["OcrJobResponse"];
+type BackendOcrSubmit = components["schemas"]["OcrJobSubmitResponse"];
 
 const TERMINAL_OCR: ReadonlySet<OcrStatus> = new Set(["completed", "failed", "cancelled"]);
 
 export interface OcrUploadInput {
   file: File;
-  documentType?: DocumentType;
   autoClassify?: boolean;
   idempotencyKey?: string;
 }
@@ -14,20 +18,30 @@ export interface OcrUploadInput {
 export interface OcrUploadResponse {
   ocr_job_id: string;
   status: OcrStatus;
+  files_count: number;
+  auto_classify: boolean;
+  poll_url: string;
 }
 
 export function useOcrUpload() {
   return useMutation({
-    mutationFn: async (input: OcrUploadInput) => {
+    mutationFn: async (input: OcrUploadInput): Promise<OcrUploadResponse> => {
       const fd = new FormData();
-      fd.append("file", input.file, input.file.name);
-      if (input.documentType) fd.append("document_type", input.documentType);
+      // Backend expects the `files` field (multi-file, array-style).
+      fd.append("files", input.file, input.file.name);
       if (input.autoClassify != null) fd.append("auto_classify", String(input.autoClassify));
-      return apiFetch<OcrUploadResponse>("/api/v1/ocr/jobs", {
+      const raw = await apiFetch<BackendOcrSubmit>("/api/v1/ocr/jobs", {
         method: "POST",
         body: fd,
         idempotencyKey: input.idempotencyKey,
       });
+      return {
+        ocr_job_id: raw.ocr_job_id,
+        status: raw.status,
+        files_count: raw.files_count,
+        auto_classify: raw.auto_classify,
+        poll_url: raw.poll_url,
+      };
     },
   });
 }
@@ -35,7 +49,12 @@ export function useOcrUpload() {
 export function useOcrJob(ocrJobId: string | null, pollMs = 2000) {
   return useQuery({
     queryKey: ["ocr-job", ocrJobId],
-    queryFn: () => apiFetch<OcrJob>(`/api/v1/ocr/jobs/${encodeURIComponent(ocrJobId ?? "")}`),
+    queryFn: async (): Promise<OcrJob> => {
+      const raw = await apiFetch<BackendOcrJob>(
+        `/api/v1/ocr/jobs/${encodeURIComponent(ocrJobId ?? "")}`,
+      );
+      return adaptOcrJob(raw);
+    },
     enabled: Boolean(ocrJobId),
     refetchInterval: (q) => {
       const data = q.state.data as OcrJob | undefined;

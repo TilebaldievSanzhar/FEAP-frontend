@@ -82,6 +82,8 @@ export function DocumentDropzone({ file, onFileChange, maxSizeMb, disabled }: Pr
         role="button"
         tabIndex={0}
         aria-disabled={disabled}
+        aria-label={t("document.dropzoneClick")}
+        aria-describedby="dropzone-hint"
         onClick={() => (disabled ? undefined : inputRef.current?.click())}
         onKeyDown={(e) => {
           if (disabled) return;
@@ -98,6 +100,7 @@ export function DocumentDropzone({ file, onFileChange, maxSizeMb, disabled }: Pr
         onDragLeave={() => setDragOver(false)}
         className={cn(
           "flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-8 text-center transition-colors",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/30",
           disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-accent/40",
         )}
@@ -107,20 +110,26 @@ export function DocumentDropzone({ file, onFileChange, maxSizeMb, disabled }: Pr
           <span className="font-medium">{t("document.dropzoneClick")}</span>{" "}
           <span className="text-muted-foreground">{t("document.dropzoneOr")}</span>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p id="dropzone-hint" className="text-xs text-muted-foreground">
           {t("document.dropzoneHint", { max: maxSizeMb })}
         </p>
         <input
           ref={inputRef}
           type="file"
-          className="hidden"
+          className="sr-only"
           accept={ACCEPT.join(",")}
           onChange={(e) => handleFiles(e.target.files)}
           disabled={disabled}
+          tabIndex={-1}
+          aria-hidden
         />
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

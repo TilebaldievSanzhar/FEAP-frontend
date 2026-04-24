@@ -12,10 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DocumentDropzone } from "@/components/document/DocumentDropzone";
-import { DocumentTypeSelector } from "@/components/document/DocumentTypeSelector";
 
 import { useOcrUpload } from "@/api/ocr";
-import type { DocumentType } from "@/api/types";
 import { useIdempotencyKey } from "@/hooks/useIdempotencyKey";
 import { parseApiError } from "@/lib/errors";
 import { getConfig } from "@/lib/config";
@@ -27,7 +25,6 @@ function DocumentUploadPage() {
   const idempotency = useIdempotencyKey();
 
   const [file, setFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<DocumentType>("unknown");
   const [autoClassify, setAutoClassify] = useState(true);
 
   const upload = useOcrUpload();
@@ -39,7 +36,6 @@ function DocumentUploadPage() {
     try {
       const res = await upload.mutateAsync({
         file,
-        documentType: documentType === "unknown" ? undefined : documentType,
         autoClassify,
         idempotencyKey: idempotency.key,
       });
@@ -71,12 +67,6 @@ function DocumentUploadPage() {
               file={file}
               onFileChange={setFile}
               maxSizeMb={config.ocrMaxFileMb}
-              disabled={submitting}
-            />
-
-            <DocumentTypeSelector
-              value={documentType}
-              onChange={setDocumentType}
               disabled={submitting}
             />
 

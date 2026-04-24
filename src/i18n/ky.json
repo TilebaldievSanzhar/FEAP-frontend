@@ -1,0 +1,197 @@
+{
+  "app": {
+    "title": "FEAP",
+    "subtitle": "ТН ВЭД классификатору",
+    "navClassify": "Классификация",
+    "navDocument": "Документтер",
+    "navTree": "ТН ВЭД дарагы",
+    "navLookup": "Код боюнча издөө",
+    "navNtm": "НТР чаралары"
+  },
+  "classify": {
+    "title": "Бир товарды классификациялоо",
+    "descriptionLabel": "Товардын сыпаттамасы",
+    "descriptionPlaceholder": "Мисалы: Электр тиш щёткасы Oral-B Pro 3 иондук тазалоо менен…",
+    "submit": "Классификациялоо",
+    "additionalInfo": "Кошумча параметрлер",
+    "addParameter": "Параметр кошуу",
+    "keyPlaceholder": "Параметр (мисалы, материал)",
+    "valuePlaceholder": "Мааниси"
+  },
+  "result": {
+    "chain": "Чечимдер чынжыры",
+    "duty": "Бажы (ЕТТ)",
+    "vat": "КНС",
+    "excise": "Акциз",
+    "confidence": "Ишенимдүүлүк",
+    "opi": "ОПИ",
+    "requiresReview": "Эксперттин текшерүүсү талап кылынат"
+  },
+  "needsInput": {
+    "title": "Тактоо керек",
+    "description": "Колдонулган аракеттер: {{used}} дан {{limit}}",
+    "chainSoFar": "Азыр аныкталганы",
+    "questions": "Параметрлерди тактаңыз",
+    "freeComment": "Эркин комментарий",
+    "limitReached": "Тактоо лимити түгөндү. Товарды кеңирирээк сыпаттап, кайра башта."
+  },
+  "tree": {
+    "title": "ТН ВЭД дарагы",
+    "description": "Бөлүмдөр жана чакан топтор боюнча навигация",
+    "empty": "Балдары жок",
+    "loading": "Жүктөлүүдө…",
+    "lookupPlaceholder": "Кодду жазыңыз (мисалы, 8509)",
+    "open": "Ачуу"
+  },
+  "code": {
+    "title": "{{code}} коду",
+    "notFound": "Код табылган жок",
+    "ratesTitle": "Ставкалар",
+    "ntmTitle": "НТР чаралары",
+    "ntmEmpty": "НТР чаралары табылган жок",
+    "ntmCountries": "Өлкөлөр"
+  },
+  "document": {
+    "uploadTitle": "Документти жүктөө",
+    "uploadDescription": "Инвойс, спецификация же контракт. OCR позицияларды таанып, андан кийин классификация башталат.",
+    "uploadSubmit": "Жүктөө",
+    "backToUpload": "Жүктөөгө кайтуу",
+    "dropzoneClick": "Файлды тандоо үчүн чыкылдатыңыз",
+    "dropzoneOr": "же бул жерге сүйрөп таштаңыз",
+    "dropzoneHint": "PDF же сүрөт, {{max}} МБ чейин",
+    "errorTooLarge": "Файл уруксат чегинен чоң ({{max}} МБ)",
+    "errorType": "Колдоого алынбаган формат",
+    "typeLabel": "Документтин түрү",
+    "type": {
+      "unknown": "Автоматтык аныктоо",
+      "invoice": "Инвойс",
+      "customs": "Бажы декларациясы",
+      "specification": "Спецификация",
+      "contract": "Контракт"
+    },
+    "autoClassify": "OCR дан кийин автоматтык классификациялоо",
+    "autoClassifyHint": "Чыгарылган позицияларды кол менен текшерүүсүз.",
+    "ocrTitle": "OCR документти иштетип жатат",
+    "ocrFailed": "OCR катасы менен аяктады",
+    "ocrJobId": "OCR тапшырма",
+    "reviewTitle": "Документти талдоо",
+    "extractedTitle": "Чыгарылган позициялар",
+    "extractedDescription": "Кошулган позициялардын баарын классификациялоо үчүн ишке киргизиңиз.",
+    "launchBatch": "Классификациялоо ({{count}})",
+    "stageOf": "Этап {{index}} / {{total}}",
+    "stage": {
+      "pending": "Кезекте",
+      "extracting": "Таануу",
+      "structuring": "Карточкаларды чыгаруу",
+      "completed": "Даяр",
+      "failed": "Ката",
+      "cancelled": "Жокко чыгарылды"
+    },
+    "empty": "Документте товар позициялары табылган жок",
+    "totalCount": "Баары: {{total}} (кошулган: {{included}}, өткөрүлгөн: {{skipped}})",
+    "col": {
+      "description": "Сыпаттама",
+      "material": "Материал",
+      "function": "Арналышы",
+      "quantity": "Саны",
+      "country": "Өлкө",
+      "hint": "Жардам",
+      "actions": "Аракеттер"
+    },
+    "unitPlaceholder": "даана",
+    "skipRow": "Сапты өткөрүү",
+    "restoreRow": "Сапты кайтаруу",
+    "duplicateRow": "Сапты көчүрүү",
+    "bulkCountryLabel": "Чыгарылган өлкө — баарына",
+    "bulkCountryPlaceholder": "Мисалы: Кытай",
+    "bulkCountryApply": "Баарына колдонуу",
+    "draftDirty": "Өзгөргөн: {{changed}}, өчүрүлгөн: {{removed}}, кошулган: {{added}}",
+    "resetDraft": "Оңдоолорду жокко чыгаруу",
+    "rawRow": "OCR баштапкы сабы"
+  },
+  "jobs": {
+    "title": "Товарларды классификациялоо",
+    "jobId": "Тапшырма",
+    "progressTitle": "Прогресс",
+    "empty": "Иштетилген позициялар азырынча жок",
+    "emptyFiltered": "Мындай статустагы позиция жок",
+    "clearFilter": "Чыпканы жокко чыгаруу",
+    "openBatchAnswer": "Тактоолорго жооп берүү ({{count}})",
+    "retryFailed": "Каталарды кайталоо ({{count}})",
+    "retryQueued": "Кайра иштетүү кезекке коюлду",
+    "newJobCreated": "Жаңы тапшырма түзүлдү",
+    "exportCsv": "CSV түрүндө экспорт",
+    "exportEmpty": "Экспорттоо үчүн маалымат жок",
+    "batchAnswerTitle": "{{count}} позиция боюнча тактоолор",
+    "batchAnswerDescription": "Маанилерди толтуруп, бир талап менен жөнөтүңүз.",
+    "submitAllAnswers": "Баардык жоопторду жөнөтүү",
+    "answersSent": "Жооптор жөнөтүлдү",
+    "liveSse": "Live (SSE)",
+    "liveConnecting": "Кошулуу…",
+    "livePolling": "Сурамжылоо",
+    "item": {
+      "needsInputTitle": "Тактоо талап кылынат"
+    }
+  },
+  "ntm": {
+    "lookupTitle": "НТР чаралары боюнча маалымат",
+    "lookupDescription": "Ылайыктуу тарифтик эмес чараларды алуу үчүн ТН ВЭД кодун жазыңыз.",
+    "lookupSubmit": "Табуу",
+    "measuresFor": "Бул код үчүн чаралар",
+    "verifyTitle": "НТР чараларын верификациялоо",
+    "verifyDescription": "Чаралардын товарга шайкеш келишин сыпаттамасы боюнча текшерүү.",
+    "verifyResultTitle": "Верификация жыйынтыгы",
+    "verifyResultCount": "Текшерилген чаралар: {{count}}",
+    "codeLabel": "ТН ВЭД коду",
+    "codePlaceholder": "Мисалы: 8509800000",
+    "codeError": "Жок дегенде 2 сан жазыңыз",
+    "descriptionLabel": "Товардын сыпаттамасы",
+    "descriptionPlaceholder": "Мүнөздөмөлөрдү, материалды, арналышты көрсөтүңүз…",
+    "descriptionError": "Жок дегенде 3 белги",
+    "submit": "Текшерүү",
+    "reasoning": "Негиздөө",
+    "legalBasis": "Негизи",
+    "status": {
+      "applies": "Колдонулат",
+      "does_not_apply": "Колдонулбайт",
+      "uncertain": "Текшерүү керек",
+      "may_apply": "Колдонулушу мүмкүн",
+      "informational": "Маалымат үчүн"
+    }
+  },
+  "actions": {
+    "copy": "Көчүрүү",
+    "copied": "Көчүрүлдү",
+    "copyCode": "Кодду көчүрүү",
+    "openInTree": "Дарактан ачуу",
+    "submitAnswers": "Жоопторду жөнөтүү",
+    "submitting": "Жөнөтүлүүдө…",
+    "cancel": "Жокко чыгаруу",
+    "reset": "Тазалоо",
+    "remove": "Өчүрүү",
+    "expand": "Жайылтуу",
+    "collapse": "Жыйыштыруу"
+  },
+  "status": {
+    "pending": "Кезекте",
+    "running": "Иштеп жатат",
+    "completed": "Даяр",
+    "needs_input": "Тактоо керек",
+    "partial": "Жарым-жартылай",
+    "failed": "Ката",
+    "cancelled": "Жокко чыгарылды"
+  },
+  "errors": {
+    "generic": "Бир нерсе болду. Кайра аракет кылып көрүңүз."
+  },
+  "header": {
+    "theme": "Тема",
+    "themeLight": "Жарык",
+    "themeDark": "Караңгы",
+    "themeSystem": "Система",
+    "language": "Тил",
+    "langRu": "Русский",
+    "langKy": "Кыргызча",
+    "skipToContent": "Мазмунга өтүү"
+  }
+}
