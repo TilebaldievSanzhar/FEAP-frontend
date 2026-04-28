@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FileText, UploadCloud, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatBytes } from "@/lib/format";
@@ -53,25 +53,29 @@ export function DocumentDropzone({ file, onFileChange, maxSizeMb, disabled }: Pr
   }
 
   if (file) {
+    const ext = file.name.split(".").pop()?.toUpperCase() ?? "FILE";
     return (
-      <div className="flex items-center justify-between rounded-md border bg-muted/30 p-3">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <FileText className="h-8 w-8 shrink-0 text-muted-foreground" aria-hidden />
-          <div className="overflow-hidden">
-            <div className="truncate font-medium">{file.name}</div>
-            <div className="text-xs text-muted-foreground">{formatBytes(file.size)}</div>
+      <div className="space-y-2">
+        <div className="kicker">{t("document.uploadedLabel")}</div>
+        <div className="flex items-center gap-3 rounded-[var(--r-md)] border border-[var(--border)] bg-card px-3.5 py-3">
+          <div className="grid h-[44px] w-9 shrink-0 place-items-center rounded bg-[var(--primary-tint)] font-mono text-[10px] font-semibold text-[var(--primary)]">
+            {ext}
           </div>
+          <div className="flex-1 overflow-hidden">
+            <div className="truncate text-[13px] font-medium">{file.name}</div>
+            <div className="text-[11.5px] text-[var(--text-subtle)]">{formatBytes(file.size)}</div>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={t("actions.remove")}
+            onClick={() => onFileChange(null)}
+            disabled={disabled}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={t("actions.remove")}
-          onClick={() => onFileChange(null)}
-          disabled={disabled}
-        >
-          <X className="h-4 w-4" />
-        </Button>
       </div>
     );
   }
@@ -99,19 +103,17 @@ export function DocumentDropzone({ file, onFileChange, maxSizeMb, disabled }: Pr
         }}
         onDragLeave={() => setDragOver(false)}
         className={cn(
-          "flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-8 text-center transition-colors",
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/30",
-          disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-accent/40",
+          "dropzone outline-none",
+          dragOver && "dragover",
+          disabled && "cursor-not-allowed opacity-60",
         )}
       >
-        <UploadCloud className="h-10 w-10 text-muted-foreground" aria-hidden />
-        <div className="text-sm">
-          <span className="font-medium">{t("document.dropzoneClick")}</span>{" "}
-          <span className="text-muted-foreground">{t("document.dropzoneOr")}</span>
+        <div className="dropzone-ico">
+          <Upload className="h-5 w-5" />
         </div>
-        <p id="dropzone-hint" className="text-xs text-muted-foreground">
-          {t("document.dropzoneHint", { max: maxSizeMb })}
+        <h4 className="m-0 text-[15px] font-semibold">{t("document.dropzoneTitle")}</h4>
+        <p id="dropzone-hint" className="m-0 text-[13px] text-[var(--text-subtle)]">
+          {t("document.dropzoneSubtitle", { max: maxSizeMb })}
         </p>
         <input
           ref={inputRef}

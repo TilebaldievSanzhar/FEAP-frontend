@@ -21,61 +21,50 @@ function NodeRow({ node, depth }: NodeProps) {
   return (
     <li>
       <div
-        className={cn(
-          "flex items-center gap-1 rounded px-2 py-1 hover:bg-accent",
-          "transition-colors",
-        )}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        className={cn("tree-node")}
+        style={{ paddingLeft: 8 + depth * 14 }}
+        onClick={() => canExpand && setOpen((v) => !v)}
       >
         {canExpand ? (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="inline-flex h-5 w-5 items-center justify-center rounded hover:bg-muted"
-            aria-label={open ? t("actions.collapse") : t("actions.expand")}
-          >
-            {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
+          <span className="caret">
+            {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </span>
         ) : (
-          <span className="h-5 w-5" />
+          <span className="caret" />
         )}
         <Link
           to="/tnved/$code"
           params={{ code: node.code }}
-          className="flex items-center gap-2 text-sm"
+          className="flex flex-1 items-center gap-2 truncate no-underline"
+          onClick={(e) => e.stopPropagation()}
         >
-          <span className="rounded bg-muted px-1.5 py-0.5 text-xs uppercase text-muted-foreground">
-            {node.level}
-          </span>
-          <span className="font-mono font-semibold">{node.code_formatted ?? node.code}</span>
-          <span className="text-muted-foreground">{node.name}</span>
+          <span className="code">{node.code_formatted ?? node.code}</span>
+          <span className="flex-1 truncate text-[var(--text-muted)]">{node.name}</span>
         </Link>
       </div>
 
       {open ? (
-        <ul>
+        <ul className="pl-[18px]">
           {isLoading ? (
             <li
-              className="flex items-center gap-2 px-2 py-1 text-sm text-muted-foreground"
-              style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
+              className="flex items-center gap-2 px-2 py-1 text-[12px] text-[var(--text-subtle)]"
+              style={{ paddingLeft: `${(depth + 1) * 14 + 8}px` }}
             >
-              <Loader2 className="h-4 w-4 animate-spin" /> {t("tree.loading")}
+              <Loader2 className="h-3 w-3 animate-spin" /> {t("tree.loading")}
             </li>
           ) : isError ? (
             <li
-              className="px-2 py-1 text-sm text-destructive"
-              style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
+              className="px-2 py-1 text-[12px] text-[var(--danger)]"
+              style={{ paddingLeft: `${(depth + 1) * 14 + 8}px` }}
             >
               {t("errors.generic")}
             </li>
           ) : data?.length ? (
-            data.map((child) => (
-              <NodeRow key={child.code} node={child} depth={depth + 1} />
-            ))
+            data.map((child) => <NodeRow key={child.code} node={child} depth={depth + 1} />)
           ) : (
             <li
-              className="px-2 py-1 text-sm text-muted-foreground"
-              style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
+              className="px-2 py-1 text-[12px] text-[var(--text-subtle)]"
+              style={{ paddingLeft: `${(depth + 1) * 14 + 8}px` }}
             >
               {t("tree.empty")}
             </li>
@@ -101,15 +90,15 @@ export function TreeBrowser() {
   }
 
   if (isError) {
-    return <p className="text-sm text-destructive">{t("errors.generic")}</p>;
+    return <p className="text-sm text-[var(--danger)]">{t("errors.generic")}</p>;
   }
 
   if (!data?.length) {
-    return <p className="text-sm text-muted-foreground">{t("tree.empty")}</p>;
+    return <p className="text-sm text-[var(--text-muted)]">{t("tree.empty")}</p>;
   }
 
   return (
-    <ul className="divide-y rounded-md border">
+    <ul>
       {data.map((node) => (
         <NodeRow key={node.code} node={node} depth={0} />
       ))}

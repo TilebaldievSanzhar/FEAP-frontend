@@ -12,32 +12,25 @@ export function ClassificationChain({ chain, highlightPending, className }: Prop
   if (!chain?.length) return null;
 
   return (
-    <ol className={cn("flex flex-wrap items-center gap-1.5 text-sm", className)}>
+    <div className={cn("chain", className)}>
       {chain.map((step, idx) => {
         const isLast = idx === chain.length - 1;
+        const current = isLast || (highlightPending && isLast);
         return (
-          <li key={`${step.level}-${step.code}-${idx}`} className="flex items-center gap-1.5">
-            <div
-              className={cn(
-                "inline-flex items-center gap-1 rounded-md border px-2 py-1",
-                isLast && highlightPending
-                  ? "border-amber-400/60 bg-amber-500/10 text-amber-900 dark:text-amber-200"
-                  : "bg-muted",
-              )}
-              title={step.reasoning ?? undefined}
-            >
-              <span className="text-xs uppercase text-muted-foreground">{step.level}</span>
-              <span className="font-mono font-semibold">{step.code}</span>
-              {step.name ? (
-                <span className="truncate max-w-[14rem] text-muted-foreground">{step.name}</span>
-              ) : null}
+          <div key={`${step.level}-${step.code}-${idx}`} className="flex items-center gap-0.5">
+            <div className={cn("chain-step", current && "current")} title={step.reasoning ?? undefined}>
+              <span className="lvl">{step.level}</span>
+              <span className="code">{step.code}</span>
+              {step.name ? <span className="desc">{step.name}</span> : null}
             </div>
             {!isLast ? (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+              <span className="chain-sep">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </span>
             ) : null}
-          </li>
+          </div>
         );
       })}
-    </ol>
+    </div>
   );
 }

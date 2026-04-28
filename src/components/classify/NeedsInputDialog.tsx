@@ -1,5 +1,6 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { ArrowRight, Check, HelpCircle, TriangleAlert } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -12,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ClassificationChain } from "./ClassificationChain";
-import type { ClassifyNeedsInput } from "@/api/types";
+import { StatusChip } from "@/components/shared/StatusChip";
+import type { ClassifyNeedsInput, ClassificationChainStep } from "@/api/types";
 
 interface Props {
   data: ClassifyNeedsInput;
@@ -50,64 +51,115 @@ export function NeedsInputDialog({ data, open, onOpenChange, onSubmit, submittin
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{t("needsInput.title")}</SheetTitle>
-          <SheetDescription>
-            {t("needsInput.description", { used: answers_used, limit: answers_limit })}
+      <SheetContent side="right" className="flex w-[440px] flex-col gap-0 p-0 sm:max-w-[440px]">
+        <SheetHeader className="space-y-2 border-b border-[var(--border)] px-6 py-4 text-left">
+          <div className="flex items-center gap-2">
+            <StatusChip status="needs_input" />
+            <span className="chip chip-outline font-mono">
+              {t("needsInput.attempt", { used: answers_used + 1, limit: answers_limit })}
+            </span>
+          </div>
+          <SheetTitle className="text-base font-semibold">{t("needsInput.title")}</SheetTitle>
+          <SheetDescription className="text-[12.5px] text-[var(--text-subtle)]">
+            {t("needsInput.headline")}
           </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(submit)} className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
+          <div className="feap-scroll flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
             <section>
-              <h3 className="mb-2 text-sm font-medium">{t("needsInput.chainSoFar")}</h3>
-              <ClassificationChain
-                chain={partial.classification_chain_so_far}
-                highlightPending
-              />
+              <div className="kicker mb-2">{t("needsInput.chainSoFar")}</div>
+              <div className="flex flex-col gap-1.5">
+                {(partial.classification_chain_so_far ?? []).map(
+                  (step: ClassificationChainStep, i) => (
+                    <div
+                      key={`${step.level}-${step.code}-${i}`}
+                      className="flex items-center gap-2.5 rounded-md border border-[var(--success-border)] bg-[var(--success-tint)] px-2.5 py-2"
+                    >
+                      <Check className="h-3 w-3 text-[var(--success)]" />
+                      <div className="flex-1">
+                        <div className="text-[12.5px]">
+                          <span className="kicker mr-2">{step.level}</span>
+                          <span className="font-mono font-semibold">{step.code}</span>
+                        </div>
+                        {step.name ? (
+                          <div className="text-[11.5px] text-[var(--text-muted)]">{step.name}</div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ),
+                )}
+                <div className="flex items-center gap-2.5 rounded-md border border-[var(--warn-border)] bg-[var(--warn-tint)] px-2.5 py-2">
+                  <HelpCircle className="h-3 w-3 text-[var(--warn-strong)]" />
+                  <div className="flex-1">
+                    <div className="text-[12.5px]">
+                      <span className="kicker mr-2">{t("needsInput.nextLevel")}</span>
+                      <span className="font-mono font-semibold">
+                        {partial.partial_code ?? "—"}
+                      </span>
+                    </div>
+                    <div className="text-[11.5px] text-[var(--text-muted)]">
+                      {t("needsInput.requiresData")}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </section>
 
             {limitReached ? (
-              <p className="rounded-md border border-amber-400/60 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
-                {t("needsInput.limitReached")}
-              </p>
+              <div className="alert alert-warn">
+                <TriangleAlert className="alert-ico h-4 w-4" />
+                <div className="flex-1 text-[12.5px]">{t("needsInput.limitReached")}</div>
+              </div>
             ) : (
-              <section className="space-y-4">
-                <h3 className="text-sm font-medium">{t("needsInput.questions")}</h3>
+              <section className="flex flex-col gap-3.5">
+                <div className="kicker">{t("needsInput.questions")}</div>
                 {partial.missing_parameters.map((param, idx) => {
                   const question = partial.questions[idx] ?? param;
                   return (
                     <div key={param} className="space-y-1.5">
-                      <Label htmlFor={`answer-${idx}`}>{param}</Label>
-                      <p className="text-xs text-muted-foreground">{question}</p>
+                      <Label htmlFor={`answer-${idx}`}>
+                        {param} <span className="text-[var(--danger)]">*</span>
+                      </Label>
                       <Input
                         id={`answer-${idx}`}
                         {...register(`answers.${param}` as const)}
                         autoComplete="off"
                       />
+                      <p className="text-[11.5px] text-[var(--text-subtle)]">{question}</p>
                     </div>
                   );
                 })}
 
                 <div className="space-y-1.5">
                   <Label htmlFor="comment">{t("needsInput.freeComment")}</Label>
-                  <Textarea id="comment" rows={3} {...register("comment")} />
+                  <Textarea
+                    id="comment"
+                    rows={3}
+                    placeholder={t("needsInput.freeCommentPlaceholder")}
+                    {...register("comment")}
+                  />
+                </div>
+
+                <div className="alert alert-warn">
+                  <TriangleAlert className="alert-ico h-4 w-4" />
+                  <div className="flex-1 text-[12.5px]">{t("needsInput.attemptHint")}</div>
                 </div>
               </section>
             )}
           </div>
 
-          <SheetFooter>
+          <SheetFooter className="flex-row justify-end gap-2 border-t border-[var(--border)] bg-[var(--bg-subtle)] px-6 py-3.5">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
               {t("actions.cancel")}
             </Button>
             <Button type="submit" disabled={submitting || limitReached}>
+              <ArrowRight className="h-4 w-4" />
               {submitting ? t("actions.submitting") : t("actions.submitAnswers")}
             </Button>
           </SheetFooter>

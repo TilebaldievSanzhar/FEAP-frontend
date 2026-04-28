@@ -3,13 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, Search } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,61 +25,63 @@ function NtmLookupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("ntm.lookupTitle")}</CardTitle>
-          <CardDescription>{t("ntm.lookupDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="flex gap-2" onSubmit={onSubmit}>
-            <Input
-              inputMode="numeric"
-              placeholder={t("ntm.codePlaceholder")}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <Button type="submit">
-              <Search className="h-4 w-4" />
-              {t("ntm.lookupSubmit")}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <AppShell crumbs={[t("shell.crumbRefs"), t("shell.navNtm")]}>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">{t("ntm.lookupTitle")}</h1>
+        <p className="mt-1 max-w-[640px] text-sm text-[var(--text-muted)]">
+          {t("ntm.lookupDescription")}
+        </p>
+      </header>
+
+      <form
+        onSubmit={onSubmit}
+        className="mb-4 flex max-w-md gap-2 rounded-[var(--r-lg)] border border-[var(--border)] bg-card p-4 shadow-[var(--shadow-xs)]"
+      >
+        <Input
+          inputMode="numeric"
+          placeholder={t("ntm.codePlaceholder")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="font-mono"
+        />
+        <Button type="submit">
+          <Search className="h-3.5 w-3.5" />
+          {t("ntm.lookupSubmit")}
+        </Button>
+      </form>
 
       {code ? (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <CardTitle className="font-mono">{code}</CardTitle>
-                <CardDescription>{t("ntm.measuresFor")}</CardDescription>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between rounded-[var(--r-lg)] border border-[var(--border)] bg-card px-6 py-4 shadow-[var(--shadow-xs)]">
+            <div>
+              <div className="kicker">{t("ntm.measuresFor")}</div>
+              <div className="font-mono text-[20px] font-semibold text-[var(--primary)]">
+                {code}
               </div>
-              <Button asChild size="sm" variant="secondary">
-                <Link to="/tnved/$code" params={{ code }}>
-                  <ExternalLink className="h-4 w-4" />
-                  {t("actions.openInTree")}
-                </Link>
-              </Button>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isFetching && !data ? (
-              <>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </>
-            ) : isError ? (
-              <p className="text-sm text-destructive">{t("errors.generic")}</p>
-            ) : !data?.length ? (
-              <p className="text-sm text-muted-foreground">{t("code.ntmEmpty")}</p>
-            ) : (
-              data.map((m) => <NtmMeasureCard key={m.id} measure={m} />)
-            )}
-          </CardContent>
-        </Card>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/tnved/$code" params={{ code }}>
+                <ExternalLink className="h-3.5 w-3.5" />
+                {t("actions.openInTree")}
+              </Link>
+            </Button>
+          </div>
+
+          {isFetching && !data ? (
+            <>
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </>
+          ) : isError ? (
+            <p className="text-sm text-[var(--danger)]">{t("errors.generic")}</p>
+          ) : !data?.length ? (
+            <p className="text-sm text-[var(--text-muted)]">{t("code.ntmEmpty")}</p>
+          ) : (
+            data.map((m) => <NtmMeasureCard key={m.id} measure={m} />)
+          )}
+        </section>
       ) : null}
-    </div>
+    </AppShell>
   );
 }
 

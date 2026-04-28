@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>FEAP — Frontend концепции</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body, #root { height: 100%; margin: 0; background: #f0eee9; }
+  body { overflow: hidden; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="screens-single.jsx"></script>
+<script type="text/babel" src="screens-docs.jsx"></script>
+<script type="text/babel" src="screens-batch.jsx"></script>
+<script type="text/babel" src="screens-tnved.jsx"></script>
+
+<script type="text/babel">
+const W = 1440;
+const H = 900;
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="a" title="A · Классификация одного товара" subtitle="Главная форма · результат · диалог уточнения">
+        <DCArtboard id="a1" label="A1 · Idle — пустая форма" width={W} height={H}>
+          <SingleClassifyIdle />
+        </DCArtboard>
+        <DCArtboard id="a2" label="A2 · Needs input — side panel" width={W} height={H}>
+          <SingleClassifyNeedsInput />
+        </DCArtboard>
+        <DCArtboard id="a3" label="A3 · Completed — результат" width={W} height={H}>
+          <SingleClassifyResult />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="b" title="B · Классификация из документа" subtitle="Load → OCR → редактирование → batch">
+        <DCArtboard id="b1" label="B1 · Загрузка документа" width={W} height={H}>
+          <DocumentUpload />
+        </DCArtboard>
+        <DCArtboard id="b2" label="B2 · Прогресс OCR (live)" width={W} height={H}>
+          <OcrProgress />
+        </DCArtboard>
+        <DCArtboard id="b3" label="B3 · Проверка извлечённых позиций" width={W} height={H}>
+          <ExtractedTable />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="c" title="C · Batch-задача" subtitle="Прогресс, статусы, ответы на уточнения">
+        <DCArtboard id="c1" label="C1 · Прогресс по job + items" width={W} height={H}>
+          <BatchProgress />
+        </DCArtboard>
+        <DCArtboard id="c2" label="C2 · Batch answer dialog" width={W} height={H}>
+          <BatchAnswerDialog />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="d" title="D · Справочники" subtitle="Дерево ТН ВЭД · Верификация мер НТР">
+        <DCArtboard id="d1" label="D1 · Дерево + карточка кода" width={W} height={H}>
+          <TnvedTree />
+        </DCArtboard>
+        <DCArtboard id="d2" label="D2 · Верификация мер НТР" width={W} height={H}>
+          <NtmVerify />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { AppShell } from "@/components/layout/AppShell";
 import { SingleClassifyForm } from "@/components/classify/SingleClassifyForm";
 
 function HomePage() {
+  const { t } = useTranslation();
   return (
-    <div className="mx-auto max-w-3xl">
+    <AppShell crumbs={[t("shell.crumbWork"), t("shell.navClassify")]}>
       <SingleClassifyForm />
-    </div>
+    </AppShell>
   );
 }
 
