@@ -81,6 +81,19 @@ export async function apiFetch<T = unknown>(path: string, init: ApiRequestInit =
   return (await res.json()) as T;
 }
 
+/**
+ * Absolute URL for an SSE endpoint. Native EventSource cannot send an
+ * Authorization header, so the token travels as ?access_token= (the backend
+ * accepts it on /jobs/{id}/events and checks the owner org).
+ */
+export function sseUrl(path: string): string {
+  const { apiBaseUrl } = getConfig();
+  const token = getAuthToken();
+  if (!token) return `${apiBaseUrl}${path}`;
+  const sep = path.includes("?") ? "&" : "?";
+  return `${apiBaseUrl}${path}${sep}access_token=${encodeURIComponent(token)}`;
+}
+
 export function streamSse(
   path: string,
   handlers: {
@@ -89,10 +102,10 @@ export function streamSse(
     onError?: (event: Event) => void;
   },
 ): () => void {
-  const { apiBaseUrl, sseEnabled } = getConfig();
+  const { sseEnabled } = getConfig();
   if (!sseEnabled) return () => undefined;
 
-  const es = new EventSource(`${apiBaseUrl}${path}`);
+  const es = new EventSource(sseUrl(path));
   if (handlers.onMessage) es.onmessage = handlers.onMessage;
   if (handlers.onError) es.onerror = handlers.onError;
   if (handlers.onEvent) {

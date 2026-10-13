@@ -33,6 +33,9 @@ server {
     # SSE endpoint: disable buffering and keep the connection alive long enough
     # for long-running job streams (no request/response buffering, chunked).
     location ~ ^/api/v1/jobs/[^/]+/events$ {
+        # EventSource can't send headers, so the JWT rides in ?access_token=.
+        # Keep it out of the access log.
+        access_log off;
         # Variable in proxy_pass forces per-request resolution via the resolver
         # directive above. Without this, nginx caches the upstream IP forever.
         set $api_upstream "${API_UPSTREAM}";

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getConfig } from "@/lib/config";
+import { sseUrl } from "@/api/client";
 import { useJob, useJobItems, type JobItemsResponse } from "@/api/jobs";
 import type { Job, JobItem, JobItemStatus } from "@/api/types";
+import { useAuthStore } from "@/stores/auth";
 
 type LiveStatus = "idle" | "connecting" | "open" | "polling" | "closed";
 
@@ -44,6 +46,8 @@ export function useJobLive(
 ) {
   const queryClient = useQueryClient();
   const { sseEnabled, apiBaseUrl } = getConfig();
+  // Reconnect when the session changes (login, logout, switch-org).
+  const token = useAuthStore((s) => s.token);
   const [status, setStatus] = useState<LiveStatus>("idle");
   const lastHeartbeatRef = useRef<number>(Date.now());
 
@@ -60,8 +64,7 @@ export function useJobLive(
     }
 
     setStatus("connecting");
-    const url = `${apiBaseUrl}/api/v1/jobs/${encodeURIComponent(jobId)}/events`;
-    const es = new EventSource(url);
+    const es = new EventSource(sseUrl(`/api/v1/jobs/${encodeURIComponent(jobId)}/events`));
     let closed = false;
 
     function refreshJob() {
@@ -128,7 +131,7 @@ export function useJobLive(
       closed = true;
       es.close();
     };
-  }, [jobId, sseEnabled, apiBaseUrl, queryClient]);
+  }, [jobId, sseEnabled, apiBaseUrl, token, queryClient]);
 
   // Terminate live status when the job is terminal.
   useEffect(() => {
