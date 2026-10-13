@@ -1,11 +1,13 @@
 import { useEffect } from "react";
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/stores/ui";
+import { useAuthStore } from "@/stores/auth";
+import { addUnauthorizedListener } from "@/api/auth";
 import { setLocale as setI18nLocale } from "@/i18n";
 
 function applyTheme(theme: "light" | "dark" | "system") {
@@ -20,6 +22,7 @@ function RootLayout() {
   const theme = useUiStore((s) => s.theme);
   const locale = useUiStore((s) => s.locale);
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     applyTheme(theme);
@@ -33,6 +36,17 @@ function RootLayout() {
   useEffect(() => {
     if (locale) setI18nLocale(locale);
   }, [locale]);
+
+  // Expired/invalid token → drop the session and send the user to /login.
+  useEffect(() => {
+    return addUnauthorizedListener(() => {
+      const { token, clearSession } = useAuthStore.getState();
+      if (!token) return; // anonymous dev mode — nothing to drop
+      clearSession();
+      toast.error(t("auth.sessionExpired"));
+      void navigate({ to: "/login" });
+    });
+  }, [navigate, t]);
 
   return (
     <TooltipProvider delayDuration={150}>

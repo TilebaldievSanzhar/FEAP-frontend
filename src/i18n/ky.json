@@ -193,5 +193,51 @@
     "langRu": "Русский",
     "langKy": "Кыргызча",
     "skipToContent": "Мазмунга өтүү"
+  },
+  "shell": {
+    "navDeclarations": "Декларациялар",
+    "navCatalog": "Товарлар каталогу",
+    "orgs": "Уюмдар",
+    "logout": "Чыгуу",
+    "orgSwitched": "Уюм: {{org}}"
+  },
+  "common": {
+    "retry": "Кайталоо",
+    "cancel": "Жокко чыгаруу",
+    "yes": "ооба",
+    "no": "жок"
+  },
+  "auth": {
+    "loginTitle": "Кирүү",
+    "noAccount": "Аккаунт жокпу?",
+    "registerLink": "Катталуу",
+    "email": "Email",
+    "password": "Сырсөз",
+    "submitLogin": "Кирүү",
+    "registerTitle": "Катталуу",
+    "haveAccount": "Аккаунт барбы?",
+    "loginLink": "Кирүү",
+    "name": "Аты",
+    "orgName": "Уюмдун аталышы",
+    "submitRegister": "Аккаунт түзүү",
+    "sessionExpired": "Сессия бүттү — кайра кириңиз"
+  },
+  "decl": {
+    "title": "Декларациялар",
+    "subtitle": "жеткирүү досьелери",
+    "newShipment": "Жаңы досье",
+    "open": "Ачуу",
+    "clone": "Клон",
+    "delete": "Өчүрүү",
+    "noCode": "коду жок"
+  },
+  "ws": {
+    "tabShipment": "Жеткирүү",
+    "tabItems": "Товарлар",
+    "tabDocs": "Документтер",
+    "tabChecks": "Текшерүүлөр",
+    "tabDraft": "ДТ долбоору",
+    "save": "Досьени сактоо",
+    "generateDraft": "ДТ долбоорун чогултуу"
   }
 }

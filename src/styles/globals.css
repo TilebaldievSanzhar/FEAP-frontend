@@ -1,83 +1,85 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, "Noto Sans", sans-serif;
+    "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-mono:
-    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
+  --font-serif: "IBM Plex Serif", ui-serif, Georgia, serif;
 
   --radius: 0.5rem;
 }
 
 /* ------------------------------------------------------------------ */
-/* FEAP design tokens — cool slate neutrals + deep indigo accent       */
+/* FEAP design tokens v2 — warm near-monochrome + cool indigo accent   */
+/* (source: Claude Design «FEAP v2.0» design-tokens.css)               */
 /* ------------------------------------------------------------------ */
 @layer base {
   :root {
     /* Surfaces */
-    --bg: #ffffff;
-    --bg-subtle: #f8fafc;
-    --bg-muted: #f1f5f9;
-    --bg-sunken: #eef2f6;
-    --border: #e2e8f0;
-    --border-strong: #cbd5e1;
+    --bg: #fafaf7;
+    --bg-subtle: #f7f5ee;
+    --bg-muted: #f3f1ea;
+    --bg-sunken: #efede3;
+    --border: #e5e1d6;
+    --border-strong: #d5d0c2;
 
     /* Text */
-    --text: #0f172a;
-    --text-muted: #475569;
-    --text-subtle: #64748b;
-    --text-faint: #94a3b8;
+    --text: #0e0e0c;
+    --text-muted: #3d3b36;
+    --text-subtle: #76736a;
+    --text-faint: #a3a095;
 
-    /* Primary — deep indigo */
-    --primary: oklch(0.45 0.15 265);
-    --primary-hover: oklch(0.4 0.16 265);
-    --primary-tint: oklch(0.96 0.02 265);
-    --primary-tint-strong: oklch(0.92 0.04 265);
+    /* Primary — indigo accent */
+    --primary: oklch(0.42 0.1 250);
+    --primary-hover: oklch(0.36 0.1 250);
+    --primary-tint: oklch(0.94 0.02 250);
+    --primary-tint-strong: oklch(0.86 0.04 250);
     --primary-fg: #ffffff;
 
     /* Semantic */
-    --success: oklch(0.62 0.15 155);
-    --success-tint: oklch(0.96 0.04 155);
-    --success-border: oklch(0.85 0.08 155);
-    --warn: oklch(0.72 0.15 75);
-    --warn-strong: oklch(0.5 0.15 75);
-    --warn-tint: oklch(0.97 0.05 85);
-    --warn-border: oklch(0.85 0.1 80);
-    --danger: oklch(0.58 0.2 25);
-    --danger-tint: oklch(0.96 0.04 25);
-    --danger-border: oklch(0.85 0.1 25);
-    --info: oklch(0.58 0.12 240);
-    --info-tint: oklch(0.96 0.03 240);
-    --info-border: oklch(0.85 0.06 240);
+    --success: oklch(0.55 0.11 150);
+    --success-tint: oklch(0.95 0.04 150);
+    --success-border: oklch(0.85 0.05 150);
+    --warn: oklch(0.62 0.13 75);
+    --warn-strong: oklch(0.5 0.13 75);
+    --warn-tint: oklch(0.95 0.05 80);
+    --warn-border: oklch(0.85 0.06 75);
+    --danger: oklch(0.55 0.16 25);
+    --danger-tint: oklch(0.95 0.04 25);
+    --danger-border: oklch(0.85 0.07 25);
+    --info: oklch(0.5 0.09 240);
+    --info-tint: oklch(0.95 0.02 240);
+    --info-border: oklch(0.85 0.04 240);
 
     /* shadcn-compatible HSL tokens (mapped to design palette) */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --background: 60 23% 97%;
+    --foreground: 60 8% 5%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 60 8% 5%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 25% 35%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 72% 50%;
+    --popover-foreground: 60 8% 5%;
+    --secondary: 46 24% 94%;
+    --secondary-foreground: 60 8% 5%;
+    --muted: 46 24% 94%;
+    --muted-foreground: 45 6% 34%;
+    --accent: 46 24% 94%;
+    --accent-foreground: 60 8% 5%;
+    --destructive: 12 60% 45%;
     --destructive-foreground: 0 0% 100%;
-    --input: 214 32% 91%;
-    --ring: 252 70% 45%;
+    --input: 44 22% 84%;
+    --ring: 250 45% 42%;
 
-    /* Radii */
-    --r-sm: 4px;
-    --r-md: 6px;
-    --r-lg: 10px;
-    --r-xl: 14px;
+    /* Radii — disciplined */
+    --r-sm: 3px;
+    --r-md: 5px;
+    --r-lg: 8px;
+    --r-xl: 12px;
 
     /* Shadows */
     --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -89,55 +91,55 @@
   }
 
   .dark {
-    --bg: #0b1220;
-    --bg-subtle: #0f172a;
-    --bg-muted: #18233a;
-    --bg-sunken: #0c1426;
-    --border: #1e293b;
-    --border-strong: #334155;
-    --text: #f8fafc;
-    --text-muted: #cbd5e1;
-    --text-subtle: #94a3b8;
-    --text-faint: #64748b;
+    --bg: #131210;
+    --bg-subtle: #181713;
+    --bg-muted: #1f1d18;
+    --bg-sunken: #100f0c;
+    --border: #2a2820;
+    --border-strong: #3a372c;
+    --text: #f2f1ea;
+    --text-muted: #ccc9bd;
+    --text-subtle: #93907e;
+    --text-faint: #6b685c;
 
-    --primary: oklch(0.62 0.18 265);
-    --primary-hover: oklch(0.7 0.18 265);
-    --primary-tint: oklch(0.3 0.07 265);
-    --primary-tint-strong: oklch(0.38 0.1 265);
+    --primary: oklch(0.68 0.09 250);
+    --primary-hover: oklch(0.74 0.09 250);
+    --primary-tint: oklch(0.28 0.04 250);
+    --primary-tint-strong: oklch(0.35 0.06 250);
 
-    --success: oklch(0.78 0.14 155);
-    --success-tint: oklch(0.3 0.06 155);
-    --success-border: oklch(0.42 0.08 155);
+    --success: oklch(0.72 0.1 150);
+    --success-tint: oklch(0.3 0.05 150);
+    --success-border: oklch(0.42 0.07 150);
 
-    --warn: oklch(0.78 0.13 80);
-    --warn-strong: oklch(0.85 0.13 80);
-    --warn-tint: oklch(0.32 0.08 80);
-    --warn-border: oklch(0.45 0.1 80);
+    --warn: oklch(0.75 0.12 80);
+    --warn-strong: oklch(0.82 0.12 80);
+    --warn-tint: oklch(0.3 0.07 80);
+    --warn-border: oklch(0.45 0.09 80);
 
-    --danger: oklch(0.72 0.18 25);
-    --danger-tint: oklch(0.32 0.08 25);
-    --danger-border: oklch(0.45 0.1 25);
+    --danger: oklch(0.7 0.16 25);
+    --danger-tint: oklch(0.3 0.07 25);
+    --danger-border: oklch(0.45 0.09 25);
 
-    --info: oklch(0.75 0.12 240);
-    --info-tint: oklch(0.3 0.06 240);
-    --info-border: oklch(0.42 0.08 240);
+    --info: oklch(0.72 0.1 240);
+    --info-tint: oklch(0.29 0.05 240);
+    --info-border: oklch(0.42 0.07 240);
 
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
-    --secondary: 217 33% 18%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 18%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 18%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 45%;
-    --destructive-foreground: 210 40% 98%;
-    --input: 217 33% 18%;
-    --ring: 252 60% 60%;
+    --background: 45 8% 6%;
+    --foreground: 48 20% 93%;
+    --card: 45 8% 8%;
+    --card-foreground: 48 20% 93%;
+    --popover: 45 8% 8%;
+    --popover-foreground: 48 20% 93%;
+    --secondary: 42 10% 15%;
+    --secondary-foreground: 48 20% 93%;
+    --muted: 42 10% 15%;
+    --muted-foreground: 45 8% 65%;
+    --accent: 42 10% 15%;
+    --accent-foreground: 48 20% 93%;
+    --destructive: 12 55% 45%;
+    --destructive-foreground: 48 20% 93%;
+    --input: 42 10% 15%;
+    --ring: 250 40% 62%;
   }
 }
 
@@ -178,11 +180,17 @@
     background-color: var(--bg);
     color: var(--text);
     font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.45;
+    font-size: 13.5px;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv05", "cv11";
+  }
+
+  .font-serif {
+    font-family: var(--font-serif);
   }
 
   .font-mono,
@@ -602,6 +610,44 @@
 }
 .feap-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--text-faint);
+}
+
+/* Eyebrow — mono uppercase section label (design v2) */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-subtle);
+  font-weight: 500;
+}
+
+/* Графа ДТ reference badge («гр. 22») */
+.g-badge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-tint);
+  padding: 1px 5px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+}
+
+/* Key/value row for extracted document fields */
+.kv-row {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px dashed var(--border);
+  padding: 4px 0;
+  font-size: 12px;
+}
+.kv-row .k {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-subtle);
+  width: 120px;
+  flex-shrink: 0;
 }
 
 @keyframes feap-spin {
