@@ -11,16 +11,20 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as CatalogRouteImport } from './routes/catalog'
+import { Route as CalcRouteImport } from './routes/calc'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DeclarationsIndexRouteImport } from './routes/declarations.index'
+import { Route as CatalogIndexRouteImport } from './routes/catalog.index'
 import { Route as TnvedTreeRouteImport } from './routes/tnved.tree'
 import { Route as TnvedCodeRouteImport } from './routes/tnved.$code'
+import { Route as ReferenceRemediesRouteImport } from './routes/reference.remedies'
+import { Route as ReferenceAgreementsRouteImport } from './routes/reference.agreements'
 import { Route as NtmVerifyRouteImport } from './routes/ntm.verify'
 import { Route as NtmLookupRouteImport } from './routes/ntm.lookup'
 import { Route as DocumentUploadRouteImport } from './routes/document.upload'
 import { Route as DeclarationsNewRouteImport } from './routes/declarations.new'
 import { Route as DeclarationsShipmentIdRouteImport } from './routes/declarations.$shipmentId'
+import { Route as CatalogSkuRouteImport } from './routes/catalog.$sku'
 import { Route as DocumentOcrJobIdReviewRouteImport } from './routes/document.$ocrJobId.review'
 import { Route as DocumentJobIdResultsRouteImport } from './routes/document.$jobId.results'
 
@@ -34,9 +38,9 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CatalogRoute = CatalogRouteImport.update({
-  id: '/catalog',
-  path: '/catalog',
+const CalcRoute = CalcRouteImport.update({
+  id: '/calc',
+  path: '/calc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +53,11 @@ const DeclarationsIndexRoute = DeclarationsIndexRouteImport.update({
   path: '/declarations/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CatalogIndexRoute = CatalogIndexRouteImport.update({
+  id: '/catalog/',
+  path: '/catalog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TnvedTreeRoute = TnvedTreeRouteImport.update({
   id: '/tnved/tree',
   path: '/tnved/tree',
@@ -57,6 +66,16 @@ const TnvedTreeRoute = TnvedTreeRouteImport.update({
 const TnvedCodeRoute = TnvedCodeRouteImport.update({
   id: '/tnved/$code',
   path: '/tnved/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferenceRemediesRoute = ReferenceRemediesRouteImport.update({
+  id: '/reference/remedies',
+  path: '/reference/remedies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferenceAgreementsRoute = ReferenceAgreementsRouteImport.update({
+  id: '/reference/agreements',
+  path: '/reference/agreements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NtmVerifyRoute = NtmVerifyRouteImport.update({
@@ -84,6 +103,11 @@ const DeclarationsShipmentIdRoute = DeclarationsShipmentIdRouteImport.update({
   path: '/declarations/$shipmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CatalogSkuRoute = CatalogSkuRouteImport.update({
+  id: '/catalog/$sku',
+  path: '/catalog/$sku',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocumentOcrJobIdReviewRoute = DocumentOcrJobIdReviewRouteImport.update({
   id: '/document/$ocrJobId/review',
   path: '/document/$ocrJobId/review',
@@ -97,32 +121,40 @@ const DocumentJobIdResultsRoute = DocumentJobIdResultsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/catalog': typeof CatalogRoute
+  '/calc': typeof CalcRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/catalog/$sku': typeof CatalogSkuRoute
   '/declarations/$shipmentId': typeof DeclarationsShipmentIdRoute
   '/declarations/new': typeof DeclarationsNewRoute
   '/document/upload': typeof DocumentUploadRoute
   '/ntm/lookup': typeof NtmLookupRoute
   '/ntm/verify': typeof NtmVerifyRoute
+  '/reference/agreements': typeof ReferenceAgreementsRoute
+  '/reference/remedies': typeof ReferenceRemediesRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
+  '/catalog/': typeof CatalogIndexRoute
   '/declarations/': typeof DeclarationsIndexRoute
   '/document/$jobId/results': typeof DocumentJobIdResultsRoute
   '/document/$ocrJobId/review': typeof DocumentOcrJobIdReviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/catalog': typeof CatalogRoute
+  '/calc': typeof CalcRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/catalog/$sku': typeof CatalogSkuRoute
   '/declarations/$shipmentId': typeof DeclarationsShipmentIdRoute
   '/declarations/new': typeof DeclarationsNewRoute
   '/document/upload': typeof DocumentUploadRoute
   '/ntm/lookup': typeof NtmLookupRoute
   '/ntm/verify': typeof NtmVerifyRoute
+  '/reference/agreements': typeof ReferenceAgreementsRoute
+  '/reference/remedies': typeof ReferenceRemediesRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
+  '/catalog': typeof CatalogIndexRoute
   '/declarations': typeof DeclarationsIndexRoute
   '/document/$jobId/results': typeof DocumentJobIdResultsRoute
   '/document/$ocrJobId/review': typeof DocumentOcrJobIdReviewRoute
@@ -130,16 +162,20 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/catalog': typeof CatalogRoute
+  '/calc': typeof CalcRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/catalog/$sku': typeof CatalogSkuRoute
   '/declarations/$shipmentId': typeof DeclarationsShipmentIdRoute
   '/declarations/new': typeof DeclarationsNewRoute
   '/document/upload': typeof DocumentUploadRoute
   '/ntm/lookup': typeof NtmLookupRoute
   '/ntm/verify': typeof NtmVerifyRoute
+  '/reference/agreements': typeof ReferenceAgreementsRoute
+  '/reference/remedies': typeof ReferenceRemediesRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
+  '/catalog/': typeof CatalogIndexRoute
   '/declarations/': typeof DeclarationsIndexRoute
   '/document/$jobId/results': typeof DocumentJobIdResultsRoute
   '/document/$ocrJobId/review': typeof DocumentOcrJobIdReviewRoute
@@ -148,48 +184,60 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/catalog'
+    | '/calc'
     | '/login'
     | '/register'
+    | '/catalog/$sku'
     | '/declarations/$shipmentId'
     | '/declarations/new'
     | '/document/upload'
     | '/ntm/lookup'
     | '/ntm/verify'
+    | '/reference/agreements'
+    | '/reference/remedies'
     | '/tnved/$code'
     | '/tnved/tree'
+    | '/catalog/'
     | '/declarations/'
     | '/document/$jobId/results'
     | '/document/$ocrJobId/review'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/catalog'
+    | '/calc'
     | '/login'
     | '/register'
+    | '/catalog/$sku'
     | '/declarations/$shipmentId'
     | '/declarations/new'
     | '/document/upload'
     | '/ntm/lookup'
     | '/ntm/verify'
+    | '/reference/agreements'
+    | '/reference/remedies'
     | '/tnved/$code'
     | '/tnved/tree'
+    | '/catalog'
     | '/declarations'
     | '/document/$jobId/results'
     | '/document/$ocrJobId/review'
   id:
     | '__root__'
     | '/'
-    | '/catalog'
+    | '/calc'
     | '/login'
     | '/register'
+    | '/catalog/$sku'
     | '/declarations/$shipmentId'
     | '/declarations/new'
     | '/document/upload'
     | '/ntm/lookup'
     | '/ntm/verify'
+    | '/reference/agreements'
+    | '/reference/remedies'
     | '/tnved/$code'
     | '/tnved/tree'
+    | '/catalog/'
     | '/declarations/'
     | '/document/$jobId/results'
     | '/document/$ocrJobId/review'
@@ -197,16 +245,20 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CatalogRoute: typeof CatalogRoute
+  CalcRoute: typeof CalcRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  CatalogSkuRoute: typeof CatalogSkuRoute
   DeclarationsShipmentIdRoute: typeof DeclarationsShipmentIdRoute
   DeclarationsNewRoute: typeof DeclarationsNewRoute
   DocumentUploadRoute: typeof DocumentUploadRoute
   NtmLookupRoute: typeof NtmLookupRoute
   NtmVerifyRoute: typeof NtmVerifyRoute
+  ReferenceAgreementsRoute: typeof ReferenceAgreementsRoute
+  ReferenceRemediesRoute: typeof ReferenceRemediesRoute
   TnvedCodeRoute: typeof TnvedCodeRoute
   TnvedTreeRoute: typeof TnvedTreeRoute
+  CatalogIndexRoute: typeof CatalogIndexRoute
   DeclarationsIndexRoute: typeof DeclarationsIndexRoute
   DocumentJobIdResultsRoute: typeof DocumentJobIdResultsRoute
   DocumentOcrJobIdReviewRoute: typeof DocumentOcrJobIdReviewRoute
@@ -228,11 +280,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/catalog': {
-      id: '/catalog'
-      path: '/catalog'
-      fullPath: '/catalog'
-      preLoaderRoute: typeof CatalogRouteImport
+    '/calc': {
+      id: '/calc'
+      path: '/calc'
+      fullPath: '/calc'
+      preLoaderRoute: typeof CalcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -249,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeclarationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/catalog/': {
+      id: '/catalog/'
+      path: '/catalog'
+      fullPath: '/catalog/'
+      preLoaderRoute: typeof CatalogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tnved/tree': {
       id: '/tnved/tree'
       path: '/tnved/tree'
@@ -261,6 +320,20 @@ declare module '@tanstack/react-router' {
       path: '/tnved/$code'
       fullPath: '/tnved/$code'
       preLoaderRoute: typeof TnvedCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reference/remedies': {
+      id: '/reference/remedies'
+      path: '/reference/remedies'
+      fullPath: '/reference/remedies'
+      preLoaderRoute: typeof ReferenceRemediesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reference/agreements': {
+      id: '/reference/agreements'
+      path: '/reference/agreements'
+      fullPath: '/reference/agreements'
+      preLoaderRoute: typeof ReferenceAgreementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ntm/verify': {
@@ -298,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeclarationsShipmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/catalog/$sku': {
+      id: '/catalog/$sku'
+      path: '/catalog/$sku'
+      fullPath: '/catalog/$sku'
+      preLoaderRoute: typeof CatalogSkuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/document/$ocrJobId/review': {
       id: '/document/$ocrJobId/review'
       path: '/document/$ocrJobId/review'
@@ -317,16 +397,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CatalogRoute: CatalogRoute,
+  CalcRoute: CalcRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  CatalogSkuRoute: CatalogSkuRoute,
   DeclarationsShipmentIdRoute: DeclarationsShipmentIdRoute,
   DeclarationsNewRoute: DeclarationsNewRoute,
   DocumentUploadRoute: DocumentUploadRoute,
   NtmLookupRoute: NtmLookupRoute,
   NtmVerifyRoute: NtmVerifyRoute,
+  ReferenceAgreementsRoute: ReferenceAgreementsRoute,
+  ReferenceRemediesRoute: ReferenceRemediesRoute,
   TnvedCodeRoute: TnvedCodeRoute,
   TnvedTreeRoute: TnvedTreeRoute,
+  CatalogIndexRoute: CatalogIndexRoute,
   DeclarationsIndexRoute: DeclarationsIndexRoute,
   DocumentJobIdResultsRoute: DocumentJobIdResultsRoute,
   DocumentOcrJobIdReviewRoute: DocumentOcrJobIdReviewRoute,

@@ -2,21 +2,49 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { Calculator } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ShipmentFormTab } from "@/components/dt/ShipmentFormTab";
 import { useCreateShipment } from "@/api/dt";
-import { emptyShipment, type ShipmentIn } from "@/api/dt-types";
+import { emptyItem, emptyShipment, formatHsCode, type ShipmentIn } from "@/api/dt-types";
 import { useHasRole } from "@/stores/auth";
 import { parseApiError } from "@/lib/errors";
+
+/** Prefill from /calc «Создать поставку» — one position with the computed code. */
+interface NewShipmentSearch {
+  code?: string;
+  origin?: string;
+  desc?: string;
+  value?: string;
+  currency?: string;
+}
+
+function initialModel(s: NewShipmentSearch): ShipmentIn {
+  const model = emptyShipment();
+  if (!s.code) return model;
+  if (s.currency && /^[A-Z]{3}$/.test(s.currency)) model.contract_currency = s.currency;
+  model.items = [
+    {
+      ...emptyItem(),
+      description: s.desc ?? "",
+      hs_code: s.code,
+      origin_country: s.origin ?? null,
+      price: s.value && /^\d+(\.\d+)?$/.test(s.value) ? s.value : "0",
+      classification_ref: null,
+    },
+  ];
+  return model;
+}
 
 function NewDeclarationPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const canWrite = useHasRole("declarant");
   const create = useCreateShipment();
 
-  const [model, setModel] = useState<ShipmentIn>(emptyShipment());
+  const [model, setModel] = useState<ShipmentIn>(() => initialModel(search));
   const [dirty, setDirty] = useState(false);
 
   async function onSave() {
@@ -46,6 +74,14 @@ function NewDeclarationPage() {
           {t("ws.newDossierHint")}
         </p>
       </header>
+      {search.code ? (
+        <div className="alert alert-info mb-4 max-w-[760px]">
+          <Calculator className="alert-ico h-4 w-4" />
+          <div className="text-[12.5px]">
+            {t("ws.fromCalc", { code: formatHsCode(search.code) })}
+          </div>
+        </div>
+      ) : null}
       <ShipmentFormTab
         value={model}
         onChange={(m) => {
@@ -63,5 +99,16 @@ function NewDeclarationPage() {
 }
 
 export const Route = createFileRoute("/declarations/new")({
+  validateSearch: (search: Record<string, unknown>): NewShipmentSearch => {
+    const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : typeof v === "number" ? String(v) : undefined);
+    const code = str(search.code)?.replace(/\D/g, "");
+    return {
+      code: code && code.length === 10 ? code : undefined,
+      origin: /^[A-Z]{2}$/.test(str(search.origin)?.toUpperCase() ?? "") ? str(search.origin)?.toUpperCase() : undefined,
+      desc: str(search.desc),
+      value: str(search.value),
+      currency: str(search.currency)?.toUpperCase(),
+    };
+  },
   component: NewDeclarationPage,
 });

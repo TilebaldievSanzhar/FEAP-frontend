@@ -1,20 +1,25 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   Bell,
+  Calculator,
   Check,
+  ChevronDown,
   ChevronRight,
   ChevronsUpDown,
   FileText,
+  Flag,
   FlaskConical,
   FolderOpen,
+  Globe,
+  Landmark,
   LogOut,
-  Network,
-  Scale,
+  Package,
+  Plus,
   Search,
-  Shield,
-  Sparkles,
+  ShieldAlert,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,7 +33,7 @@ import { cn } from "@/lib/utils";
 interface NavItem {
   to: string;
   labelKey: string;
-  icon: typeof Sparkles;
+  icon: typeof Calculator;
   matchPrefix?: string;
   isNew?: boolean;
 }
@@ -38,24 +43,149 @@ interface NavGroup {
   items: NavItem[];
 }
 
+// v3 IA: one shipment, many entry points. «Декларации» → «Поставки»,
+// «Каталог» → «Товары», «Расчёт по товару» is the main funnel.
 const NAV: NavGroup[] = [
   {
     sectionKey: "shell.sectionWork",
     items: [
-      { to: "/", labelKey: "shell.navClassify", icon: Sparkles },
+      { to: "/declarations", labelKey: "shell.navDeclarations", icon: FolderOpen, matchPrefix: "/declarations" },
+      { to: "/catalog", labelKey: "shell.navCatalog", icon: Package, matchPrefix: "/catalog" },
       { to: "/document/upload", labelKey: "shell.navDocuments", icon: FileText, matchPrefix: "/document" },
-      { to: "/declarations", labelKey: "shell.navDeclarations", icon: Scale, matchPrefix: "/declarations", isNew: true },
-      { to: "/catalog", labelKey: "shell.navCatalog", icon: FolderOpen, matchPrefix: "/catalog", isNew: true },
     ],
+  },
+  {
+    sectionKey: "shell.sectionTools",
+    items: [{ to: "/calc", labelKey: "shell.navCalc", icon: Calculator, matchPrefix: "/calc", isNew: true }],
   },
   {
     sectionKey: "shell.sectionRefs",
     items: [
-      { to: "/tnved/tree", labelKey: "shell.navTree", icon: Network, matchPrefix: "/tnved" },
-      { to: "/ntm/verify", labelKey: "shell.navNtm", icon: Shield, matchPrefix: "/ntm" },
+      { to: "/tnved/tree", labelKey: "shell.navTree", icon: Search, matchPrefix: "/tnved" },
+      { to: "/ntm/verify", labelKey: "shell.navNtm", icon: Flag, matchPrefix: "/ntm" },
+      {
+        to: "/reference/remedies",
+        labelKey: "shell.navRemedies",
+        icon: ShieldAlert,
+        matchPrefix: "/reference/remedies",
+        isNew: true,
+      },
+      {
+        to: "/reference/agreements",
+        labelKey: "shell.navAgreements",
+        icon: Globe,
+        matchPrefix: "/reference/agreements",
+        isNew: true,
+      },
     ],
   },
 ];
+
+interface NewEntry {
+  to: string | null;
+  labelKey: string;
+  subKey: string;
+  icon: typeof Calculator;
+}
+
+const NEW_ENTRIES: NewEntry[] = [
+  { to: "/calc", labelKey: "shell.newCalc", subKey: "shell.newCalcSub", icon: Calculator },
+  { to: "/declarations/new", labelKey: "shell.newShipment", subKey: "shell.newShipmentSub", icon: FolderOpen },
+  { to: "/document/upload", labelKey: "shell.newInvoice", subKey: "shell.newInvoiceSub", icon: Upload },
+  // P2 — entry for banks; not built yet.
+  { to: null, labelKey: "shell.newPayment", subKey: "shell.newPaymentSub", icon: Landmark },
+];
+
+/** Global «+ Новое» — four entries into the same workspace; keys 1–3 while open. */
+function NewMenu() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      const entry = NEW_ENTRIES[Number(e.key) - 1];
+      if (entry?.to) {
+        e.preventDefault();
+        setOpen(false);
+        void navigate({ to: entry.to });
+      }
+    }
+    function onPointer(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onPointer);
+    };
+  }, [open, navigate]);
+
+  return (
+    <div ref={rootRef} className="relative px-2.5 pt-3">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-[34px] w-full items-center justify-between rounded-[var(--r-md)] border border-[var(--primary)] bg-[var(--primary)] px-3 text-[13px] font-medium text-white hover:bg-[var(--primary-hover)]"
+      >
+        <span className="inline-flex items-center gap-1.5">
+          <Plus className="h-[13px] w-[13px]" />
+          {t("shell.new")}
+        </span>
+        <ChevronDown className="h-3 w-3" />
+      </button>
+      {open ? (
+        <div
+          role="menu"
+          className="absolute left-2.5 top-[52px] z-30 w-[300px] rounded-[var(--r-lg)] border border-[var(--border)] bg-[hsl(var(--card))] p-1 shadow-[var(--shadow-lg)]"
+        >
+          {NEW_ENTRIES.map((e, i) => {
+            const EntryIcon = e.icon;
+            const disabled = !e.to;
+            return (
+              <button
+                key={e.labelKey}
+                type="button"
+                role="menuitem"
+                disabled={disabled}
+                onClick={() => {
+                  if (!e.to) return;
+                  setOpen(false);
+                  void navigate({ to: e.to });
+                }}
+                className="grid w-full grid-cols-[28px_1fr_auto] items-center gap-2.5 rounded-[var(--r-md)] px-2.5 py-[9px] text-left hover:bg-[var(--bg-muted)] disabled:cursor-default disabled:opacity-55 disabled:hover:bg-transparent"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-[var(--r-md)] border border-[var(--border)] text-[var(--text-muted)]">
+                  <EntryIcon className="h-3.5 w-3.5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-medium">{t(e.labelKey)}</span>
+                  <span className="block text-[11.5px] text-[var(--text-subtle)]">{t(e.subKey)}</span>
+                </span>
+                {disabled ? (
+                  <span className="chip chip-outline h-[18px] font-mono text-[10px]">{t("shell.soon")}</span>
+                ) : (
+                  <span className="rounded border border-[var(--border)] bg-[var(--bg-muted)] px-1.5 font-mono text-[10px] text-[var(--text-subtle)]">
+                    {i + 1}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function initials(nameOrEmail: string): string {
   const parts = nameOrEmail.trim().split(/\s+/).filter(Boolean);
@@ -196,7 +326,7 @@ export function AppShell({ crumbs = [], children }: Props) {
     <div className="grid h-full grid-cols-[240px_1fr] bg-[var(--bg)]">
       <aside className="flex flex-col overflow-hidden border-r border-[var(--border)] bg-[hsl(var(--card))]">
         <Link
-          to="/"
+          to="/calc"
           className="flex items-center gap-2.5 border-b border-[var(--border)] px-4 py-3.5 no-underline"
         >
           <span className="grid h-[22px] w-[22px] place-items-center rounded-[var(--r-sm)] bg-[var(--text)] font-mono text-[11px] font-semibold text-[var(--bg)]">
@@ -205,16 +335,18 @@ export function AppShell({ crumbs = [], children }: Props) {
           <span className="text-[14px] font-semibold tracking-tight text-[var(--text)]">
             {t("app.title")}
           </span>
-          <span className="font-mono text-[11px] text-[var(--text-faint)]">v2</span>
+          <span className="font-mono text-[11px] text-[var(--text-faint)]">v3</span>
         </Link>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-auto px-2.5 py-3">
+        <NewMenu />
+
+        <div className="flex flex-1 flex-col gap-4 overflow-auto px-2.5 py-3.5">
           {NAV.map((group) => (
             <div key={group.sectionKey} className="flex flex-col gap-0.5">
               <div className="eyebrow px-2 pb-1.5">{t(group.sectionKey)}</div>
               {group.items.map((it) => {
                 const active = it.matchPrefix ? path.startsWith(it.matchPrefix) : path === it.to;
-                const Icon = it.icon;
+                const NavIcon = it.icon;
                 return (
                   <Link
                     key={it.to}
@@ -226,7 +358,7 @@ export function AppShell({ crumbs = [], children }: Props) {
                         : "text-[var(--text-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--text)]",
                     )}
                   >
-                    <Icon
+                    <NavIcon
                       className={cn(
                         "h-3.5 w-3.5 shrink-0",
                         active ? "text-[var(--bg)]" : "text-[var(--text-subtle)]",

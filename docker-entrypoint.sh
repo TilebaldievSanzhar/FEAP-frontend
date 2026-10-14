@@ -23,7 +23,8 @@ cat > "$CONFIG_PATH" <<EOF
   "ocrMaxFileMb": ${VITE_OCR_MAX_FILE_MB:-25},
   "batchSyncMax": ${VITE_BATCH_SYNC_MAX:-5},
   "defaultLocale": "${VITE_DEFAULT_LOCALE:-ru}",
-  "buildVersion": "${VITE_BUILD_VERSION:-dev}"
+  "buildVersion": "${VITE_BUILD_VERSION:-dev}",
+  "calcAnonDailyLimit": ${VITE_CALC_ANON_DAILY_LIMIT:-3}
 }
 EOF
 

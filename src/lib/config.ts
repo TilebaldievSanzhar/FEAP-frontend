@@ -5,6 +5,8 @@ export interface RuntimeConfig {
   batchSyncMax: number;
   defaultLocale: "ru" | "ky";
   buildVersion: string;
+  /** /calc without login: calculations per day (0 = unlimited). */
+  calcAnonDailyLimit: number;
 }
 
 const FALLBACK: RuntimeConfig = {
@@ -14,6 +16,7 @@ const FALLBACK: RuntimeConfig = {
   batchSyncMax: Number(import.meta.env.VITE_BATCH_SYNC_MAX ?? 5),
   defaultLocale: (import.meta.env.VITE_DEFAULT_LOCALE as "ru" | "ky") ?? "ru",
   buildVersion: import.meta.env.VITE_BUILD_VERSION ?? "dev",
+  calcAnonDailyLimit: Number(import.meta.env.VITE_CALC_ANON_DAILY_LIMIT ?? 3),
 };
 
 let cached: RuntimeConfig | null = null;

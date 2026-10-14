@@ -151,6 +151,40 @@ export function adaptCodeLookup(r: Schemas["CodeLookupResponse"]): TnvedCodeInfo
     unit_primary: r.unit_primary,
     unit_secondary: r.unit_secondary,
     ntm_measures: r.ntm?.measures?.map(adaptNtmMeasure),
+    vat_exemption: r.vat?.exemption
+      ? {
+          type: r.vat.exemption.type,
+          legal_ref: r.vat.exemption.legal_ref,
+          note: r.vat.exemption.note ?? null,
+        }
+      : null,
+    vat_conditional: (r.vat?.conditional ?? []).map((c) => ({
+      source: c.source,
+      rate: c.rate,
+      condition: c.condition,
+      legal_ref: c.legal_ref,
+      note: c.note ?? null,
+      valid_to: c.valid_to ?? null,
+    })),
+    trade_remedies: (r.trade_remedies ?? []).map((m) => ({
+      measure_no: m.measure_no,
+      kind: m.kind,
+      title: m.title,
+      product_description: m.product_description ?? null,
+      countries: m.countries,
+      rates: m.rates.map((x) => ({
+        rate_pct: x.rate_pct,
+        country: x.country ?? null,
+        producers: x.producers ?? [],
+        variant: x.variant ?? null,
+      })),
+      valid_to: m.valid_to ?? null,
+      notes: m.notes ?? null,
+      legal_basis: m.legal_basis ?? null,
+      source_url: m.source_url ?? null,
+      status: m.status ?? "may_apply",
+    })),
+    customs_fee: r.customs_fee ?? null,
   };
 }
 

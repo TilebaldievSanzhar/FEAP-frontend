@@ -1,24 +1,39 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Check, ChevronLeft, ChevronRight, Download, Info, RefreshCw, Sparkles, TriangleAlert } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Info,
+  RefreshCw,
+  ShieldAlert,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AICard } from "@/components/dt/AICard";
 import { FindingRow } from "@/components/dt/FindingRow";
-import { DraftStatusBadge } from "@/components/dt/badges";
+import { DraftStatusBadge, StatusPill } from "@/components/dt/badges";
 import { GraphCell, TotalCell } from "@/components/dt/GraphCells";
 import { useFixSuggestions, type ExportFormat } from "@/api/dt";
 import {
   formatHsCode,
+  isRemedyKind,
   type DtDraftOut,
   type FixOut,
   type Finding,
+  type GraphItem,
   type GraphParty,
-  type PaymentKind,
   type ShipmentIn,
 } from "@/api/dt-types";
+import { useCodeLookups } from "@/api/tnved";
+import { countryName, parseRemedyMissing, remedyRateSummary, sumMoney } from "@/lib/tariff";
 import { applyFieldPatch } from "@/lib/shipment-patch";
 import { parseApiError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
@@ -27,6 +42,8 @@ interface Props {
   draft: DtDraftOut | null;
   draftLoading: boolean;
   hasDraft: boolean;
+  /** The dossier changed after this draft was assembled. */
+  stale?: boolean;
   canWrite: boolean;
   generating: boolean;
   onGenerate: () => void;
@@ -34,6 +51,25 @@ interface Props {
   exporting: ExportFormat | null;
   model: ShipmentIn;
   onApplyPatch: (next: ShipmentIn) => void;
+  /** Jump to «Товары» → position (1-based), optionally ringing a remedy decision. */
+  onGoToItem: (position: number, remedy?: string) => void;
+  onGoToDocs: () => void;
+}
+
+/** Display order of payment kinds; unknown keys go last (keys are dynamic). */
+const PAY_ORDER = ["duty", "special", "antidumping", "countervailing", "excise", "vat", "fee"];
+const payRank = (k: string) => {
+  const i = PAY_ORDER.indexOf(k);
+  return i === -1 ? PAY_ORDER.length : i;
+};
+
+/** Findings that resolve in another tab (v3 §5.2). */
+function findingTarget(f: Finding): { tab: "items" | "docs"; position?: number } | null {
+  const pos = /^items\[(\d+)\]/.exec(f.graph ?? "");
+  const position = pos ? Number(pos[1]) + 1 : undefined;
+  if (f.rule === "W-REMEDY-EXEMPT") return { tab: "docs" };
+  if (["F-16", "F-17", "W-FTA", "W-VAT-COND"].includes(f.rule) && position) return { tab: "items", position };
+  return null;
 }
 
 function fmtNum(value: string | null | undefined): string {
@@ -54,6 +90,7 @@ export function DtDraftTab({
   draft,
   draftLoading,
   hasDraft,
+  stale,
   canWrite,
   generating,
   onGenerate,
@@ -61,6 +98,8 @@ export function DtDraftTab({
   exporting,
   model,
   onApplyPatch,
+  onGoToItem,
+  onGoToDocs,
 }: Props) {
   const { t } = useTranslation();
   const [itemIdx, setItemIdx] = useState(0);
@@ -73,6 +112,21 @@ export function DtDraftTab({
         .slice()
         .sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3)),
     [draft],
+  );
+
+  // Rates of remedies still waiting for a decision (the draft has no rate for them).
+  const pendingRemedies = useMemo(
+    () =>
+      (draft?.graphs.items ?? []).flatMap((it) =>
+        (it.tariff?.remedies ?? [])
+          .filter((r) => r.decision == null)
+          .map((r) => ({ item: it, remedy: r })),
+      ),
+    [draft],
+  );
+  const remedyLookups = useCodeLookups(
+    pendingRemedies.map(({ item }) => ({ code: item.g33, origin: item.g34 })),
+    { onDate: draft?.graphs.meta.rate_date },
   );
 
   const errorGraphs = useMemo(() => {
@@ -113,17 +167,24 @@ export function DtDraftTab({
   const item = items[Math.min(itemIdx, Math.max(0, items.length - 1))];
   const payments = g.totals.payments ?? {};
 
-  const paymentsTotal = (["duty", "excise", "vat", "fee"] as PaymentKind[])
-    .map((k) => Number(payments[k] ?? 0))
-    .filter((n) => Number.isFinite(n))
-    .reduce((a, b) => a + b, 0);
+  const payKeys = Object.keys(payments).sort((a, b) => payRank(a) - payRank(b));
+  // Exact sum of the backend's amounts — display only, nothing is recomputed.
+  const paymentsTotal = sumMoney(payKeys.map((k) => payments[k]));
 
-  const kindLabel: Record<PaymentKind, string> = {
-    duty: t("draft.duty"),
-    excise: t("draft.excise"),
-    vat: t("draft.vat"),
-    fee: t("draft.fee"),
-  };
+  const kindLabel = (kind: string) => t(`draft.pay.${kind}`, { defaultValue: kind });
+
+  // Remedy measures behind each remedy kind in totals («Антидемпинговая · AD-32»).
+  const remedyRefs = new Map<string, Set<string>>();
+  for (const it of items) {
+    for (const line of it.g47) {
+      if (isRemedyKind(line.kind) && line.ref) {
+        if (!remedyRefs.has(line.kind)) remedyRefs.set(line.kind, new Set());
+        remedyRefs.get(line.kind)!.add(line.ref);
+      }
+    }
+  }
+  const meta = g.meta;
+  const feeLine = g.totals.fee_line;
 
   function onGraphClick(graph: string) {
     const m = /^items\[(\d+)\]/.exec(graph);
@@ -196,6 +257,18 @@ export function DtDraftTab({
             </span>
           </Button>
         </div>
+
+        {stale ? (
+          <div className="alert alert-warn items-center">
+            <TriangleAlert className="alert-ico h-4 w-4" />
+            <div className="flex-1 text-[12.5px]">{t("draft.stale", { version: draft.version })}</div>
+            {canWrite ? (
+              <Button size="sm" disabled={generating} onClick={onGenerate}>
+                <RefreshCw /> {generating ? t("ws.generating") : t("draft.rebuild")}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-2.5 rounded-[var(--r-md)] bg-[var(--bg-muted)] px-3.5 py-2.5 text-[12px] text-[var(--text-subtle)]">
           <Info className="h-3.5 w-3.5 shrink-0" />
@@ -340,9 +413,36 @@ export function DtDraftTab({
                 <tbody>
                   {(item.g47.length ? item.g47 : []).map((line, i) => {
                     const pending = line.amount == null;
+                    const remedy = isRemedyKind(line.kind);
                     return (
-                      <tr key={i} className={pending && line.missing.length ? "bg-[var(--warn-tint)]" : undefined}>
-                        <td className="border-b border-[var(--border)] px-4 py-2">{kindLabel[line.kind]}</td>
+                      <tr
+                        key={i}
+                        className={
+                          remedy || (pending && line.missing.length) ? "bg-[var(--warn-tint)]" : undefined
+                        }
+                      >
+                        <td
+                          className={cn(
+                            "border-b border-[var(--border)] px-4 py-2",
+                            remedy && "shadow-[inset_3px_0_0_var(--warn)]",
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={remedy ? "font-semibold" : undefined}>{kindLabel(line.kind)}</span>
+                            {line.ref && remedy ? (
+                              <span
+                                className="inline-flex h-[18px] items-center gap-1 rounded-[var(--r-sm)] border border-[var(--warn-border)] bg-[hsl(var(--card))] px-1.5 font-mono text-[10px] text-[var(--warn-strong)]"
+                                title={line.note ?? undefined}
+                              >
+                                <ShieldAlert className="h-2.5 w-2.5" />
+                                {line.ref}
+                              </span>
+                            ) : null}
+                          </div>
+                          {line.note && (remedy || line.ref) ? (
+                            <div className="mt-0.5 text-[10.5px] text-[var(--text-subtle)]">{line.note}</div>
+                          ) : null}
+                        </td>
                         <td className="border-b border-[var(--border)] px-4 py-2 font-mono">{line.code}</td>
                         <td className="border-b border-[var(--border)] px-4 py-2 text-right font-mono tabular-nums">
                           {line.basis != null ? fmtNum(line.basis) : "—"}
@@ -352,7 +452,9 @@ export function DtDraftTab({
                         </td>
                         <td className="border-b border-[var(--border)] px-4 py-2 text-right">
                           {line.amount != null ? (
-                            <span className="font-mono font-semibold tabular-nums">{fmtNum(line.amount)}</span>
+                            <span className={cn("font-mono font-semibold tabular-nums", remedy && "text-[13px]")}>
+                              {fmtNum(line.amount)}
+                            </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 text-[11.5px] text-[var(--warn-strong)]">
                               <TriangleAlert className="h-3 w-3" />
@@ -367,29 +469,110 @@ export function DtDraftTab({
                 </tbody>
               </table>
             </div>
+
+            {item.tariff ? (
+              <TariffTrace item={item} onResolve={(no) => onGoToItem(item.g32, no)} />
+            ) : null}
           </div>
         ) : null}
 
-        {/* Totals */}
-        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-[2fr_1fr_1fr_1fr]">
-          <div className="rounded-[var(--r-lg)] bg-[var(--text)] px-4 py-4 text-[var(--bg)]">
+        {/* Totals: «К уплате» with dynamic payment keys + fee (гр. B) */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div className="rounded-[var(--r-lg)] bg-[var(--text)] px-5 py-[18px] text-[var(--bg)]">
             <div className="mb-2 font-mono text-[10.5px] uppercase tracking-widest opacity-50">
               {t("draft.totalDue")}
             </div>
-            <div className="font-mono text-[28px] font-semibold tabular-nums tracking-tight">
-              {paymentsTotal.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-              <span className="text-[14px] font-normal opacity-60">сом</span>
+            <div className="font-mono text-[32px] font-semibold tabular-nums tracking-tight">
+              {fmtNum(paymentsTotal)} <span className="text-[14px] font-normal opacity-60">сом</span>
             </div>
-            <div className="mt-1.5 text-[11px] opacity-50">
-              {(["duty", "vat", "excise"] as PaymentKind[])
-                .filter((k) => payments[k] != null)
-                .map((k) => `${kindLabel[k].toLowerCase()} ${fmtNum(payments[k] ?? null)}`)
-                .join(" · ")}
-              {payments.fee == null && !g.totals.fee_line
-                ? ` · ${t("draft.feeNotComputed")}`
-                : ""}
+            <div className="mt-3.5 flex flex-col">
+              {payKeys.map((k) => {
+                const remedy = isRemedyKind(k);
+                const zero = Number(payments[k] ?? 0) === 0;
+                const refs = [...(remedyRefs.get(k) ?? [])];
+                return (
+                  <div
+                    key={k}
+                    className={cn(
+                      "flex justify-between border-t border-[color-mix(in_oklch,var(--bg)_14%,transparent)] py-1.5 text-[12.5px]",
+                      zero ? "opacity-40" : "opacity-85",
+                    )}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {remedy ? <span className="h-1.5 w-1.5 rounded-full bg-[var(--warn-on-inverse)]" /> : null}
+                      {kindLabel(k)}
+                      {refs.length ? ` · ${refs.join(", ")}` : ""}
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono tabular-nums",
+                        remedy && "font-semibold text-[var(--warn-on-inverse)]",
+                      )}
+                    >
+                      {fmtNum(payments[k])}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {pendingRemedies.map(({ item: it, remedy: r }) => {
+              const info = remedyLookups.get(it.g33, it.g34);
+              const m = info?.trade_remedies.find((x) => x.measure_no === r.measure_no);
+              return (
+                <button
+                  key={`${it.g32}-${r.measure_no}`}
+                  type="button"
+                  onClick={() => onGoToItem(it.g32, r.measure_no)}
+                  className="mt-2.5 flex w-full items-center gap-2 rounded-[var(--r-md)] border border-dashed border-[var(--warn-on-inverse)] px-2.5 py-2 text-left text-[12px] text-[var(--warn-on-inverse)] hover:bg-[color-mix(in_oklch,var(--warn-on-inverse)_12%,transparent)]"
+                >
+                  <ShieldAlert className="h-[13px] w-[13px] shrink-0" />
+                  <span>
+                    {t("draft.itemN", { n: it.g32 })} · {r.measure_no}
+                    {m ? ` · ${remedyRateSummary(m, it.g34)} ${t("draft.ofCv")}` : ""} — {t("draft.remedyPending")}
+                  </span>
+                  <span className="ml-auto underline">{t("draft.resolve")}</span>
+                </button>
+              );
+            })}
+            {pendingRemedies.length ? (
+              <div className="mt-2 text-[11px] opacity-45">{t("draft.remedyNotInTotal")}</div>
+            ) : null}
+            <div className="mt-2.5 text-[11px] leading-normal opacity-45">
+              {meta.vat_base_includes_remedies != null
+                ? meta.vat_base_includes_remedies
+                  ? t("draft.vatBaseWithRemedies")
+                  : t("draft.vatBaseNoRemedies")
+                : null}
+              {meta.fee_mode ? ` · ${t(`draft.feeMode.${meta.fee_mode}`)}` : ""}
             </div>
           </div>
+
+          <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[hsl(var(--card))]">
+            <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+              <span className="text-[13px] font-semibold">{t("draft.feeTitle")}</span>
+              <span className="font-mono text-[11px] text-[var(--text-subtle)]">{feeLine?.code ?? "1010"}</span>
+            </div>
+            {feeLine ? (
+              <div className="grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1.5 px-4 py-3.5 text-[12px]">
+                <span className="text-[var(--text-subtle)]">{t("draft.feeBasis")}</span>
+                <span className="font-mono tabular-nums">{feeLine.basis != null ? `${fmtNum(feeLine.basis)} сом` : "—"}</span>
+                <span className="text-[var(--text-subtle)]">{t("draft.payRate")}</span>
+                <span>{feeLine.rate}</span>
+                <span className="text-[var(--text-subtle)]">{t("draft.feeAmount")}</span>
+                <span className="font-mono font-semibold tabular-nums">
+                  {feeLine.amount != null ? `${fmtNum(feeLine.amount)} сом` : t("draft.notComputed")}
+                </span>
+                {feeLine.note ? (
+                  <span className="col-span-2 mt-1 text-[11px] text-[var(--text-faint)]">{feeLine.note}</span>
+                ) : null}
+              </div>
+            ) : (
+              <div className="px-4 py-3.5 text-[12px] text-[var(--text-subtle)]">{t("draft.feeNotComputedLong")}</div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           <TotalCell label={`гр. 12 · ${t("draft.g12")}`} value={fmtNum(g.totals.g12)} unit="сом" />
           <TotalCell label={t("draft.invoiceTotal")} value={fmtNum(g.totals.invoice_total)} unit={g.header.g22.currency} />
           <TotalCell
@@ -425,9 +608,23 @@ export function DtDraftTab({
                 <TriangleAlert className="h-3 w-3" /> {t("draft.needsInputTitle")}
               </div>
               <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[11.5px] leading-relaxed text-[var(--text-muted)]">
-                {draft.missing_parameters.map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
+                {draft.missing_parameters.map((p, i) => {
+                  const jump = parseRemedyMissing(p);
+                  return (
+                    <li key={i}>
+                      {p}
+                      {jump ? (
+                        <button
+                          type="button"
+                          onClick={() => onGoToItem(jump.position, jump.measureNo)}
+                          className="ml-1.5 inline-flex items-center gap-0.5 font-medium text-[var(--primary)] hover:underline"
+                        >
+                          {t("draft.resolve")} <ArrowRight className="h-3 w-3" />
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : null}
@@ -437,20 +634,35 @@ export function DtDraftTab({
               <Check className="h-3.5 w-3.5" /> {t("draft.findingsClean")}
             </div>
           ) : (
-            findings.map((f: Finding, i) => (
-              <FindingRow
-                key={i}
-                rule={f.rule}
-                severity={f.severity}
-                message={f.message}
-                graph={f.graph}
-                expected={f.details.expected ?? null}
-                actual={f.details.actual ?? null}
-                onGraphClick={onGraphClick}
-                last={i === findings.length - 1}
-              />
-            ))
+            findings.map((f: Finding, i) => {
+              const target = findingTarget(f);
+              return (
+                <FindingRow
+                  key={i}
+                  rule={f.rule}
+                  severity={f.severity}
+                  message={f.message}
+                  graph={f.graph}
+                  expected={f.details.expected ?? null}
+                  actual={f.details.actual ?? null}
+                  onGraphClick={onGraphClick}
+                  action={
+                    target
+                      ? {
+                          label: target.tab === "docs" ? t("draft.toDocs") : t("draft.toItem"),
+                          onClick: () =>
+                            target.tab === "docs" ? onGoToDocs() : onGoToItem(target.position ?? 1),
+                        }
+                      : undefined
+                  }
+                  last={i === findings.length - 1}
+                />
+              );
+            })
           )}
+        </div>
+        <div className="px-0.5 text-[11.5px] leading-normal text-[var(--text-subtle)]">
+          <span className="font-mono text-[var(--text-muted)]">F-10</span> — {t("draft.f10Legend")}
         </div>
 
         {canWrite && findings.some((f) => f.severity !== "info") ? (
@@ -514,6 +726,86 @@ export function DtDraftTab({
           );
         })}
       </aside>
+    </div>
+  );
+}
+
+/** items[i].tariff — not a graph: the trace of tariff checks, never printed. */
+function TariffTrace({ item, onResolve }: { item: GraphItem; onResolve: (measureNo: string) => void }) {
+  const { t, i18n } = useTranslation();
+  const tr = item.tariff!;
+  const [open, setOpen] = useState(tr.remedies.length > 0);
+  const chosenVat = tr.vat_options.find((o) => o.source === tr.vat_benefit);
+  return (
+    <div className="border-t border-[var(--border)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[12.5px] font-medium hover:bg-[var(--bg-subtle)]"
+      >
+        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        {t("draft.tariffTitle")}
+        <span className="text-[11px] font-normal text-[var(--text-faint)]">{t("draft.tariffHint")}</span>
+      </button>
+      {open ? (
+        <div className="grid grid-cols-[170px_1fr] gap-x-4 gap-y-2 pb-3.5 pl-9 pr-4 text-[12px]">
+          <span className="text-[var(--text-subtle)]">{t("draft.tariffRegime")}</span>
+          <span>
+            {tr.origin_regime ? (
+              <>
+                {tr.origin_regime.country} — {tr.origin_regime.agreement}
+                {tr.preferential_duty_rate ? (
+                  <span className="text-[var(--text-subtle)]">
+                    {" "}
+                    · {t("draft.prefRate")} {tr.preferential_duty_rate} ·{" "}
+                    {tr.preferential_rate_applied ? t("draft.prefApplied") : t("draft.prefNotApplied")}
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              t("draft.regimeGeneral", { country: item.g34 ? `${item.g34} ${countryName(item.g34, i18n.language)}` : "—" })
+            )}
+          </span>
+
+          <span className="text-[var(--text-subtle)]">{t("draft.tariffRemedies")}</span>
+          <span className="flex flex-col gap-1">
+            {tr.remedies.length === 0 ? (
+              <span className="text-[var(--text-faint)]">{t("draft.noRemedies")}</span>
+            ) : (
+              tr.remedies.map((r) => (
+                <span key={r.measure_no} className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono font-semibold">{r.measure_no}</span> «{r.title}»
+                  {r.rate ? ` · ${r.rate}` : ""}
+                  {r.decision ? (
+                    <StatusPill kind={r.decision === "applies" ? "ok" : "mute"}>decision: {r.decision}</StatusPill>
+                  ) : (
+                    <>
+                      <StatusPill kind="warn">{t("draft.remedyPending")}</StatusPill>
+                      <button
+                        type="button"
+                        className="text-[11.5px] font-medium text-[var(--primary)] hover:underline"
+                        onClick={() => onResolve(r.measure_no)}
+                      >
+                        {t("draft.resolve")} →
+                      </button>
+                    </>
+                  )}
+                </span>
+              ))
+            )}
+          </span>
+
+          <span className="text-[var(--text-subtle)]">{t("draft.tariffVat")}</span>
+          <span className={tr.vat_options.length ? undefined : "text-[var(--text-faint)]"}>
+            {tr.vat_options.length === 0
+              ? t("draft.vatNoOptions")
+              : chosenVat && tr.vat_benefit_applied
+                ? t("draft.vatChosen", { rate: chosenVat.rate, ref: chosenVat.legal_ref })
+                : t("draft.vatAvailable", { n: tr.vat_options.length })}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }

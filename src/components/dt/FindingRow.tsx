@@ -16,6 +16,8 @@ interface Props {
   expected?: string | null;
   actual?: string | null;
   onGraphClick?: (graph: string) => void;
+  /** Where the finding is fixed (another tab), e.g. «Во вкладку «Документы»». */
+  action?: { label: string; onClick: () => void };
   last?: boolean;
 }
 
@@ -23,7 +25,17 @@ interface Props {
  * §11.3 of the DT spec — the single findings row used for ФЛК (F/W),
  * crosscheck (X), document checks (D) and risk signals (S).
  */
-export function FindingRow({ rule, severity, message, graph, expected, actual, onGraphClick, last }: Props) {
+export function FindingRow({
+  rule,
+  severity,
+  message,
+  graph,
+  expected,
+  actual,
+  onGraphClick,
+  action,
+  last,
+}: Props) {
   const sev = SEV[severity] ?? SEV.info;
   const Icon = sev.icon;
   return (
@@ -57,12 +69,21 @@ export function FindingRow({ rule, severity, message, graph, expected, actual, o
         ) : null}
       </div>
       <div className="min-w-0">
-        <div className="text-[12px] leading-snug text-[var(--text)]">{message}</div>
+        <div className="text-[12px] leading-snug text-[var(--text)] [overflow-wrap:anywhere]">{message}</div>
         {expected != null && actual != null ? (
           <div className="mt-1 font-mono text-[11px] tabular-nums text-[var(--text-subtle)]">
             ожидалось <span className="text-[var(--success)]">{expected}</span> · фактически{" "}
             <span className="text-[var(--danger)]">{actual}</span>
           </div>
+        ) : null}
+        {action ? (
+          <button
+            type="button"
+            onClick={action.onClick}
+            className="mt-1 text-[11.5px] font-medium text-[var(--primary)] hover:underline"
+          >
+            {action.label} →
+          </button>
         ) : null}
       </div>
     </div>

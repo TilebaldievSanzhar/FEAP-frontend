@@ -48,6 +48,8 @@
     --success-border: oklch(0.85 0.05 150);
     --warn: oklch(0.62 0.13 75);
     --warn-strong: oklch(0.5 0.13 75);
+    /* Amber on the inverted «К уплате» card (dark card in light theme). */
+    --warn-on-inverse: oklch(0.85 0.12 75);
     --warn-tint: oklch(0.95 0.05 80);
     --warn-border: oklch(0.85 0.06 75);
     --danger: oklch(0.55 0.16 25);
@@ -113,6 +115,7 @@
 
     --warn: oklch(0.75 0.12 80);
     --warn-strong: oklch(0.82 0.12 80);
+    --warn-on-inverse: oklch(0.5 0.13 75);
     --warn-tint: oklch(0.3 0.07 80);
     --warn-border: oklch(0.45 0.09 80);
 

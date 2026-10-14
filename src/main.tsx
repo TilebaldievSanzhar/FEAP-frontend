@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider, createRouter, parseSearchWith, stringifySearchWith } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import "./styles/globals.css";
@@ -12,6 +12,11 @@ import { useUiStore } from "./stores/ui";
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
+  // Search params are flat strings: keep links shareable (/calc?code=7615101000&origin=CN)
+  // instead of the default JSON quoting (?code=%227615101000%22). Numeric-looking values
+  // come back as numbers — every validateSearch coerces them to strings.
+  parseSearch: parseSearchWith(JSON.parse),
+  stringifySearch: stringifySearchWith(JSON.stringify),
 });
 
 declare module "@tanstack/react-router" {

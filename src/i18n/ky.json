@@ -195,11 +195,25 @@
     "skipToContent": "Мазмунга өтүү"
   },
   "shell": {
-    "navDeclarations": "Декларациялар",
-    "navCatalog": "Товарлар каталогу",
+    "navDeclarations": "Жеткирүүлөр",
+    "navCatalog": "Товарлар",
     "orgs": "Уюмдар",
     "logout": "Чыгуу",
-    "orgSwitched": "Уюм: {{org}}"
+    "orgSwitched": "Уюм: {{org}}",
+    "sectionTools": "Куралдар",
+    "navCalc": "Товар боюнча эсеп",
+    "navRemedies": "Рынокту коргоо чаралары",
+    "navAgreements": "Соода келишимдери",
+    "new": "Жаңы",
+    "newCalc": "Товарды эсептөө",
+    "newCalcSub": "код, төлөмдөр жана чектөөлөр",
+    "newShipment": "Жаңы жеткирүү",
+    "newShipmentSub": "досье → ДТ долбоору",
+    "newInvoice": "Инвойс жүктөө",
+    "newInvoiceSub": "OCR → жеткирүү позициялары",
+    "newPayment": "Төлөмдү текшерүү",
+    "newPaymentSub": "банк үчүн",
+    "soon": "жакында"
   },
   "common": {
     "retry": "Кайталоо",
@@ -239,5 +253,8 @@
     "tabDraft": "ДТ долбоору",
     "save": "Досьени сактоо",
     "generateDraft": "ДТ долбоорун чогултуу"
+  },
+  "calc": {
+    "title": "Товар боюнча эсеп"
   }
 }

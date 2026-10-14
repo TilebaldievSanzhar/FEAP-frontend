@@ -94,6 +94,17 @@ export interface PartyIn {
   inn?: string | null;
 }
 
+export type RemedyDecisionKind = "applies" | "not_applicable" | "exempt";
+
+/** Решение декларанта по мере защиты рынка ЕАЭС (v3 §4.1). */
+export interface RemedyDecision {
+  decision: RemedyDecisionKind;
+  variant?: string | null;
+  /** Ставка вручную, % — только для мер с неразобранной ставкой. */
+  rate_pct?: string | null;
+  note?: string | null;
+}
+
 export interface ShipmentItemIn {
   description: string;
   hs_code?: string | null;
@@ -107,6 +118,13 @@ export interface ShipmentItemIn {
   supp_qty?: string | null;
   supp_unit?: string | null;
   preference?: string | null;
+  /** Ставка по графику ЗСТ в формате ЕТТ ('0%', '5%'); работает только с кодом гр. 36. */
+  preferential_duty_rate?: string | null;
+  /** Производитель (гр. 31) — для индивидуальных ставок мер защиты рынка. */
+  manufacturer?: string | null;
+  remedy_decisions?: Record<string, RemedyDecision>;
+  /** source условной льготы НДС из справки по коду; null = общая ставка. */
+  vat_benefit?: string | null;
   sku?: string | null;
   classification_ref?: string | null;
   extra?: Record<string, unknown>;
@@ -189,7 +207,14 @@ export interface Finding {
   details: Record<string, string>;
 }
 
-export type PaymentKind = "fee" | "duty" | "excise" | "vat";
+export type RemedyKind = "special" | "antidumping" | "countervailing";
+export type PaymentKind = "fee" | "duty" | RemedyKind | "excise" | "vat";
+
+export const REMEDY_KINDS: readonly RemedyKind[] = ["special", "antidumping", "countervailing"];
+
+export function isRemedyKind(kind: string): kind is RemedyKind {
+  return (REMEDY_KINDS as readonly string[]).includes(kind);
+}
 
 export interface PaymentLine {
   kind: PaymentKind;
@@ -199,6 +224,32 @@ export interface PaymentLine {
   amount: string | null;
   missing: string[];
   note?: string | null;
+  /** Мера/льгота, на которой основана строка (AD-32, pkm816_a2). */
+  ref?: string | null;
+}
+
+/** items[i].tariff — след тарифных проверок; не графа, в печатную форму не идёт. */
+export interface ItemTariff {
+  origin_regime: {
+    country: string;
+    regime: string;
+    agreement: string;
+    in_force_from: string | null;
+    origin_proof: string | null;
+  } | null;
+  preferential_duty_rate: string | null;
+  preferential_rate_applied: boolean;
+  remedies: Array<{
+    measure_no: string;
+    kind: string;
+    title: string;
+    decision: RemedyDecisionKind | null;
+    notes: string | null;
+    rate?: string;
+  }>;
+  vat_options: Array<{ source: string; rate: string; condition: string; legal_ref: string }>;
+  vat_benefit: string | null;
+  vat_benefit_applied: boolean;
 }
 
 export interface GraphParty {
@@ -224,6 +275,7 @@ export interface GraphItem {
     qty_unit: string | null;
     packages: number | null;
     sku: string | null;
+    manufacturer?: string | null;
   };
   g33: string | null;
   g34: string | null;
@@ -237,6 +289,8 @@ export interface GraphItem {
   g45: string | null;
   g46: string | null;
   g47: PaymentLine[];
+  /** Есть в проектах, собранных бэкендом v3; в старых версиях отсутствует. */
+  tariff?: ItemTariff;
 }
 
 export interface Graphs {
@@ -245,6 +299,8 @@ export interface Graphs {
     structure_version: string;
     rate_date: string;
     generated_at: string;
+    vat_base_includes_remedies?: boolean;
+    fee_mode?: "percent" | "fixed" | "off";
   };
   header: {
     g01: { direction: string; procedure: string; form: string };
@@ -277,7 +333,8 @@ export interface Graphs {
     g12: string | null;
     invoice_total: string | null;
     additions_total: string | null;
-    payments: Partial<Record<PaymentKind, string | null>>;
+    /** Ключи динамические (duty, antidumping, fee…) — рендерить все пришедшие. */
+    payments: Record<string, string | null>;
     fee_line: PaymentLine | null;
   };
 }
@@ -609,6 +666,10 @@ export function emptyItem(): ShipmentItemIn {
     supp_qty: null,
     supp_unit: null,
     preference: null,
+    preferential_duty_rate: null,
+    manufacturer: null,
+    remedy_decisions: {},
+    vat_benefit: null,
     sku: null,
     classification_ref: null,
     extra: {},

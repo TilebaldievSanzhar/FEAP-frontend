@@ -36,13 +36,17 @@ const TABS: WorkspaceTab[] = ["shipment", "items", "docs", "checks", "draft"];
 
 interface WorkspaceSearch {
   tab?: WorkspaceTab;
+  /** «Товары»: 1-based position to open (jump from the draft). */
+  item?: number;
+  /** «Товары»: remedy to ring inside that position, e.g. AD-32. */
+  remedy?: string;
 }
 
 function WorkspacePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { shipmentId } = Route.useParams();
-  const { tab: tabParam } = Route.useSearch();
+  const { tab: tabParam, item: focusItem, remedy: focusRemedy } = Route.useSearch();
   const tab: WorkspaceTab = tabParam ?? "shipment";
   const canWrite = useHasRole("declarant");
 
@@ -87,11 +91,11 @@ function WorkspacePage() {
     [model, update, t],
   );
 
-  function setTab(next: WorkspaceTab) {
+  function setTab(next: WorkspaceTab, focus?: { item?: number; remedy?: string }) {
     void navigate({
       to: "/declarations/$shipmentId",
       params: { shipmentId },
-      search: { tab: next },
+      search: { tab: next, ...focus },
       replace: true,
     });
   }
@@ -172,6 +176,11 @@ function WorkspacePage() {
 
   const data = shipment.data;
   const effectiveModel = model ?? data.data;
+  // The dossier changed after the draft was assembled (unsaved edits, or a save
+  // later than the draft) — amounts and checks may be out of date.
+  const draftStale = Boolean(
+    draft.data && (dirty || Date.parse(data.updated_at) > Date.parse(draft.data.created_at)),
+  );
   const itemsWithoutCode = effectiveModel.items.filter((i) => !i.hs_code).length;
   const docItems = docs.data?.items ?? [];
 
@@ -268,6 +277,8 @@ function WorkspacePage() {
                 saving={update.isPending}
                 dirty={dirty}
                 canWrite={canWrite}
+                focus={focusItem ? { position: focusItem, remedy: focusRemedy ?? null } : null}
+                onGoToDocs={() => setTab("docs")}
               />
             ) : null}
             {tab === "docs" ? <ShipmentDocsTab shipmentId={shipmentId} canWrite={canWrite} /> : null}
@@ -279,6 +290,7 @@ function WorkspacePage() {
                 draft={draft.data ?? null}
                 draftLoading={draft.isLoading && Boolean(draftId)}
                 hasDraft={Boolean(draftId)}
+                stale={draftStale}
                 canWrite={canWrite}
                 generating={generate.isPending}
                 onGenerate={() => void onGenerate()}
@@ -289,6 +301,8 @@ function WorkspacePage() {
                   onChange(next);
                   void save(next);
                 }}
+                onGoToItem={(position, remedy) => setTab("items", { item: position, remedy })}
+                onGoToDocs={() => setTab("docs")}
               />
             ) : null}
           </div>
@@ -316,8 +330,13 @@ function WorkspacePage() {
 }
 
 export const Route = createFileRoute("/declarations/$shipmentId")({
-  validateSearch: (search: Record<string, unknown>): WorkspaceSearch => ({
-    tab: TABS.includes(search.tab as WorkspaceTab) ? (search.tab as WorkspaceTab) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): WorkspaceSearch => {
+    const item = Number(search.item);
+    return {
+      tab: TABS.includes(search.tab as WorkspaceTab) ? (search.tab as WorkspaceTab) : undefined,
+      item: Number.isInteger(item) && item > 0 ? item : undefined,
+      remedy: typeof search.remedy === "string" && search.remedy ? search.remedy : undefined,
+    };
+  },
   component: WorkspacePage,
 });

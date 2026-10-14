@@ -32,7 +32,9 @@ function LoginPage() {
     try {
       const session = await login.mutateAsync({ email, password });
       setSession(session);
-      void navigate({ to: redirect ?? "/declarations" });
+      // Internal paths only (may carry a query, e.g. /calc?code=…); never //host.
+      if (redirect?.startsWith("/") && !redirect.startsWith("//")) void navigate({ href: redirect });
+      else void navigate({ to: "/declarations" });
     } catch (err) {
       setError(parseApiError(err).message);
     }

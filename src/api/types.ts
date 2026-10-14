@@ -102,6 +102,72 @@ export interface TnvedCodeInfo {
   unit_primary?: string | null;
   unit_secondary?: string | null;
   ntm_measures?: NtmMeasure[];
+  /** Безусловная льгота НДС (уже учтена в vat_rate). */
+  vat_exemption?: { type: string; legal_ref: string; note?: string | null } | null;
+  /** Условные льготы НДС — только показываются, применяет декларант в позиции. */
+  vat_conditional: VatConditional[];
+  /** Меры защиты рынка ЕАЭС, совпавшие по коду (и стране, если указана). */
+  trade_remedies: TradeRemedy[];
+  /** Правило сбора за таможенные операции; null — расчёт сбора отключён. */
+  customs_fee?: string | null;
+}
+
+export interface VatConditional {
+  /** Ключ для ShipmentItemIn.vat_benefit. */
+  source: string;
+  rate: string;
+  condition: string;
+  legal_ref: string;
+  note?: string | null;
+  valid_to?: string | null;
+}
+
+export type TradeRemedyKind = "antidumping" | "special" | "countervailing" | string;
+
+export interface TradeRemedyRate {
+  rate_pct: string;
+  country: string | null;
+  /** Пусто = единая ставка / «прочие производители». */
+  producers: string[];
+  variant: string | null;
+}
+
+export interface TradeRemedy {
+  measure_no: string;
+  kind: TradeRemedyKind;
+  title: string;
+  product_description?: string | null;
+  countries: string[];
+  rates: TradeRemedyRate[];
+  valid_to?: string | null;
+  notes?: string | null;
+  legal_basis?: string | null;
+  source_url?: string | null;
+  /** Всегда may_apply: код совпал, подпадание под описание решает человек. */
+  status: string;
+}
+
+/** GET /api/v1/reference/trade-remedies — запись реестра ЕЭК. */
+export interface TradeRemedyRegistryItem extends Omit<TradeRemedy, "status"> {
+  /** Коды ТН ВЭД меры: 10 знаков или префиксы позиций ("7210"). */
+  codes: string[];
+  valid_from?: string | null;
+  /** Ставку из текста реестра не удалось разобрать — вводится вручную. */
+  needs_review: boolean;
+  /** applied — применяется, suspended — временно не применяется. */
+  status: "applied" | "suspended" | string;
+}
+
+/** GET /api/v1/reference/trade-agreements */
+export interface TradeAgreement {
+  country: string;
+  regime: "fta" | "fta_interim" | string;
+  agreement: string;
+  status: "in_force" | "signed" | "terminated" | string;
+  in_force_from?: string | null;
+  origin_proof?: string | null;
+  note?: string | null;
+  verified: boolean;
 }
 
 // ────────────────────────────────────────────────────────────────────────────

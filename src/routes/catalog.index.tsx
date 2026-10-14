@@ -1,22 +1,14 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Check, Info, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Info, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { CatalogEditor } from "@/components/catalog/CatalogEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { useCatalog, useDeleteCatalogItem, useUpsertCatalogItem } from "@/api/dt";
 import { formatHsCode, type CatalogItemOut } from "@/api/dt-types";
 import { useHasRole } from "@/stores/auth";
@@ -25,26 +17,9 @@ import { parseApiError } from "@/lib/errors";
 
 const PAGE_SIZE = 50;
 
-function attrsToText(attrs: Record<string, unknown>): string {
-  return Object.entries(attrs)
-    .map(([k, v]) => `${k} = ${String(v)}`)
-    .join("\n");
-}
-
-function textToAttrs(text: string): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const line of text.split("\n")) {
-    const idx = line.indexOf("=");
-    if (idx <= 0) continue;
-    const k = line.slice(0, idx).trim();
-    const v = line.slice(idx + 1).trim();
-    if (k) out[k] = v;
-  }
-  return out;
-}
-
 function CatalogPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const canWrite = useHasRole("declarant");
 
   const [query, setQuery] = useState("");
@@ -163,7 +138,11 @@ function CatalogPage() {
             </thead>
             <tbody>
               {items.map((c) => (
-                <tr key={c.id} className="align-top hover:bg-[var(--bg-subtle)]">
+                <tr
+                  key={c.id}
+                  className="cursor-pointer align-top hover:bg-[var(--bg-subtle)]"
+                  onClick={() => void navigate({ to: "/catalog/$sku", params: { sku: c.sku } })}
+                >
                   <td className="border-b border-[var(--border)] px-3 py-2.5 font-mono text-[12px] font-medium">
                     {c.sku}
                   </td>
@@ -202,7 +181,7 @@ function CatalogPage() {
                   </td>
                   <td className="border-b border-[var(--border)] px-2 py-2">
                     {canWrite ? (
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button size="sm" variant="ghost" aria-label={t("catalog.edit")} onClick={() => openEdit(c)}>
                           <Pencil />
                         </Button>
@@ -260,103 +239,6 @@ function CatalogPage() {
   );
 }
 
-function CatalogEditor({
-  open,
-  onOpenChange,
-  item,
-  onSubmit,
-  pending,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  item: CatalogItemOut | null;
-  onSubmit: (payload: {
-    sku: string;
-    description: string;
-    hs_code: string | null;
-    attributes: Record<string, unknown>;
-  }) => void;
-  pending: boolean;
-}) {
-  const { t } = useTranslation();
-  const [sku, setSku] = useState(item?.sku ?? "");
-  const [description, setDescription] = useState(item?.description ?? "");
-  const [hsCode, setHsCode] = useState(item?.hs_code ?? "");
-  const [attrsText, setAttrsText] = useState(item ? attrsToText(item.attributes) : "");
-
-  function submit() {
-    if (!sku.trim() || !description.trim()) {
-      toast.error(t("catalog.requiredHint"));
-      return;
-    }
-    if (hsCode && !/^\d{10}$/.test(hsCode)) {
-      toast.error(t("catalog.codeFormat"));
-      return;
-    }
-    onSubmit({
-      sku: sku.trim(),
-      description: description.trim(),
-      hs_code: hsCode || null,
-      attributes: textToAttrs(attrsText),
-    });
-  }
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex flex-col bg-[var(--bg)]">
-        <SheetHeader>
-          <SheetTitle>{item ? t("catalog.editTitle") : t("catalog.createTitle")}</SheetTitle>
-          <SheetDescription>{t("catalog.upsertHint")}</SheetDescription>
-        </SheetHeader>
-        <div className="flex flex-1 flex-col gap-4 overflow-auto px-6">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-medium text-[var(--text-muted)]">SKU *</span>
-            <Input className="font-mono" value={sku} disabled={Boolean(item)} onChange={(e) => setSku(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-medium text-[var(--text-muted)]">
-              {t("catalog.colDesc")} *
-            </span>
-            <Textarea className="min-h-[70px]" value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-medium text-[var(--text-muted)]">
-              {t("catalog.colCode")}
-            </span>
-            <Input
-              className="font-mono"
-              maxLength={10}
-              placeholder="8509800000"
-              value={hsCode}
-              onChange={(e) => setHsCode(e.target.value.replace(/\D/g, ""))}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-medium text-[var(--text-muted)]">
-              {t("catalog.colAttrs")}
-            </span>
-            <Textarea
-              className="min-h-[100px] font-mono text-[12px]"
-              placeholder={t("catalog.attrsPlaceholder")}
-              value={attrsText}
-              onChange={(e) => setAttrsText(e.target.value)}
-            />
-            <span className="text-[11px] text-[var(--text-faint)]">{t("catalog.attrsHint")}</span>
-          </div>
-        </div>
-        <SheetFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            {t("common.cancel")}
-          </Button>
-          <Button disabled={pending} onClick={submit}>
-            <Check /> {t("ws.save")}
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-export const Route = createFileRoute("/catalog")({
+export const Route = createFileRoute("/catalog/")({
   component: CatalogPage,
 });

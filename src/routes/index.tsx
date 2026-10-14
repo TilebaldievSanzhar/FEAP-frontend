@@ -1,17 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { AppShell } from "@/components/layout/AppShell";
-import { SingleClassifyForm } from "@/components/classify/SingleClassifyForm";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-function HomePage() {
-  const { t } = useTranslation();
-  return (
-    <AppShell crumbs={[t("shell.crumbWork"), t("shell.navClassify")]}>
-      <SingleClassifyForm />
-    </AppShell>
-  );
-}
-
+// v3: the main screen is «Расчёт по товару»; classification is its step 2.
 export const Route = createFileRoute("/")({
-  component: HomePage,
+  beforeLoad: () => {
+    throw redirect({ to: "/calc" });
+  },
 });
