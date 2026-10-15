@@ -18,6 +18,10 @@ interface NewShipmentSearch {
   desc?: string;
   value?: string;
   currency?: string;
+  qty?: string;
+  unit?: string;
+  /** Производитель — для индивидуальных ставок мер защиты рынка. */
+  mfr?: string;
 }
 
 function initialModel(s: NewShipmentSearch): ShipmentIn {
@@ -31,6 +35,9 @@ function initialModel(s: NewShipmentSearch): ShipmentIn {
       hs_code: s.code,
       origin_country: s.origin ?? null,
       price: s.value && /^\d+(\.\d+)?$/.test(s.value) ? s.value : "0",
+      qty: s.qty && /^\d+(\.\d+)?$/.test(s.qty) ? s.qty : null,
+      qty_unit: s.unit ?? null,
+      manufacturer: s.mfr ?? null,
       classification_ref: null,
     },
   ];
@@ -108,6 +115,9 @@ export const Route = createFileRoute("/declarations/new")({
       desc: str(search.desc),
       value: str(search.value),
       currency: str(search.currency)?.toUpperCase(),
+      qty: str(search.qty),
+      unit: str(search.unit)?.slice(0, 20),
+      mfr: str(search.mfr)?.slice(0, 300),
     };
   },
   component: NewDeclarationPage,

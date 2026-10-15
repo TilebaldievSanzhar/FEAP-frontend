@@ -89,6 +89,43 @@ export function formatPct(raw: string | null | undefined): string {
   return `${s}%`;
 }
 
+/**
+ * "1321240.65" → "1 321 240,65" (NBSP groups, comma decimal). Pure string
+ * work — money from the backend is never parsed into a float.
+ */
+export function formatMoney(raw: string | null | undefined, fractionDigits = 2): string {
+  if (raw == null || raw === "") return "—";
+  const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(raw.trim());
+  if (!m) return raw;
+  const int = m[2].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const frac = (m[3] ?? "").padEnd(fractionDigits, "0").slice(0, fractionDigits);
+  return `${m[1]}${int}${fractionDigits ? `,${frac}` : ""}`;
+}
+
+/** "87.450000" → "87,45"; trims trailing zeros of a decimal string. */
+export function formatDecimal(raw: string | null | undefined): string {
+  if (raw == null || raw === "") return "—";
+  const m = /^(-?\d+)(?:\.(\d*?)0*)?$/.exec(raw.trim());
+  if (!m) return raw;
+  return m[2] ? `${m[1]},${m[2]}` : m[1];
+}
+
+/** Incoterms where freight to the EAEU border is not in the price (backend W-FREIGHT). */
+export const FREIGHT_EXPECTED = ["EXW", "FCA", "FAS", "FOB"];
+
+/**
+ * Short product title from a long description: the first sentence, cut at a
+ * word boundary (PDF header, page subtitle). The full text travels separately.
+ */
+export function productTitle(description: string | null | undefined, max = 120): string | null {
+  const text = (description ?? "").trim();
+  if (!text) return null;
+  const sentence = text.split(/(?<=[.!?])\s/)[0];
+  if (sentence.length <= max) return sentence.replace(/[.!?]$/, "");
+  const cut = sentence.slice(0, max);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), max / 2)).trimEnd()}…`;
+}
+
 /** "2027-05-28" → "28.05.2027"; anything else is returned unchanged. */
 export function formatIsoDate(iso: string | null | undefined): string {
   if (!iso) return "";

@@ -8,6 +8,8 @@
  * render them as-is (mono), never parse to float for display.
  */
 
+import type { PassportIn } from "./calc";
+
 // ────────────────────────────────────────────────────────────────────────────
 // Auth
 // ────────────────────────────────────────────────────────────────────────────
@@ -361,6 +363,8 @@ export interface CatalogItemIn {
   hs_code?: string | null;
   attributes?: Record<string, unknown>;
   approved_by?: string | null;
+  /** Паспорт товара: параметры партии + обоснование кода; null/нет — не менять. */
+  passport?: PassportIn | null;
 }
 
 export interface CatalogItemOut {
@@ -370,6 +374,8 @@ export interface CatalogItemOut {
   description: string;
   hs_code: string | null;
   attributes: Record<string, unknown>;
+  /** {} у записей без паспорта. */
+  passport: PassportIn;
   usage_count: number;
   approved_by: string | null;
   approved_at: string | null;

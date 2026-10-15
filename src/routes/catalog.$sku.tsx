@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Calculator, Download, FolderOpen, Pencil } from "lucide-react";
+import { Calculator, Check, Download, FolderOpen, Loader2, Pencil } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { CalcAmounts } from "@/components/calc/CalcAmounts";
+import { LotParamsPanel } from "@/components/calc/LotParamsPanel";
+import { lotFromParams, lotToParams, toCalcIn, type LotState } from "@/components/calc/lot";
 import { CatalogEditor } from "@/components/catalog/CatalogEditor";
 import { CodeSourceBadge } from "@/components/dt/badges";
 import { CountryChip } from "@/components/tariff/CountryChip";
@@ -12,9 +15,12 @@ import { HsChain } from "@/components/tariff/HsChain";
 import { TariffSummary } from "@/components/tariff/TariffSummary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { downloadCatalogPassport, useCalc } from "@/api/calc";
 import { useCatalog, useUpsertCatalogItem } from "@/api/dt";
 import { normalizeOrigin, useCodeLookup } from "@/api/tnved";
 import { formatHsCode, type CatalogItemOut } from "@/api/dt-types";
+import type { TnvedCodeInfo } from "@/api/types";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useHasRole } from "@/stores/auth";
 import { parseApiError } from "@/lib/errors";
 import { formatIsoDate, todayIso } from "@/lib/tariff";
@@ -43,10 +49,28 @@ function PassportPage() {
   const upsert = useUpsertCatalogItem();
   const [editOpen, setEditOpen] = useState(false);
 
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [originOverride, setOriginOverride] = useState<string | null | undefined>(undefined);
+
   const item = list.data?.items.find((i) => i.sku === sku) ?? null;
-  const origin = item ? normalizeOrigin(attr(item, ORIGIN_KEYS)) : null;
-  const manufacturer = item ? attr(item, MANUFACTURER_KEYS) : null;
+  const saved = item?.passport?.calc ?? null;
+  // Passport parameters win over free-form attributes (origin = CN).
+  const savedOrigin = normalizeOrigin(saved?.origin_country ?? (item ? attr(item, ORIGIN_KEYS) : null));
+  const origin = originOverride !== undefined ? originOverride : savedOrigin;
+  const manufacturer = saved?.manufacturer ?? (item ? attr(item, MANUFACTURER_KEYS) : null);
+  const steps = item?.passport?.classification?.steps ?? [];
   const lookup = useCodeLookup(item?.hs_code ?? null, { origin });
+
+  async function onPdf(target: CatalogItemOut) {
+    setPdfBusy(true);
+    try {
+      await downloadCatalogPassport(target.id, target.sku);
+    } catch (err) {
+      toast.error(parseApiError(err).message);
+    } finally {
+      setPdfBusy(false);
+    }
+  }
 
   const crumbs = [t("shell.sectionWork"), t("shell.navCatalog"), sku];
 
@@ -107,8 +131,8 @@ function PassportPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" className="text-[var(--text-faint)]" disabled>
-              <Download /> {t("passport.pdfSoon")}
+            <Button variant="outline" disabled={!item.hs_code || pdfBusy} onClick={() => void onPdf(item)}>
+              {pdfBusy ? <Loader2 className="animate-spin" /> : <Download />} {t("passport.pdf")}
             </Button>
             {canWrite ? (
               <Button variant="outline" onClick={() => setEditOpen(true)}>
@@ -120,7 +144,16 @@ function PassportPage() {
                 onClick={() =>
                   void navigate({
                     to: "/declarations/new",
-                    search: { code: item.hs_code ?? undefined, origin: origin ?? undefined, desc: item.description },
+                    search: {
+                      code: item.hs_code ?? undefined,
+                      origin: origin ?? undefined,
+                      desc: item.description,
+                      value: saved?.price ?? undefined,
+                      currency: saved?.price ? saved.currency : undefined,
+                      qty: saved?.qty ?? undefined,
+                      unit: saved?.qty_unit ?? undefined,
+                      mfr: saved?.manufacturer ?? undefined,
+                    },
                   })
                 }
               >
@@ -145,6 +178,25 @@ function PassportPage() {
               </div>
               <div className="flex flex-col gap-3 px-4 py-3.5">
                 <HsChain code={item.hs_code} withSubheading />
+                {steps.length ? (
+                  <div className="flex flex-col gap-1.5 rounded-[var(--r-md)] bg-[var(--bg-subtle)] px-3 py-2.5">
+                    <div className="text-[12px] font-medium">
+                      {t("passport.rationale", {
+                        confidence:
+                          item.passport?.classification?.confidence != null
+                            ? item.passport.classification.confidence.toFixed(2)
+                            : "—",
+                      })}
+                    </div>
+                    {steps.map((st, i) => (
+                      <div key={i} className="text-[12px] leading-relaxed text-[var(--text-muted)]">
+                        <span className="font-mono text-[var(--text)]">{st.code}</span>
+                        {st.name ? ` — ${st.name}` : ""}
+                        {st.reasoning ? `. ${st.reasoning}` : ""}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="text-[12.5px] leading-relaxed text-[var(--text-muted)]">
                   {item.approved_by ? t("passport.codeApprovedNote") : t("passport.codeDraftNote")}
                 </div>
@@ -175,6 +227,17 @@ function PassportPage() {
                 ) : null}
               </div>
             </section>
+          ) : null}
+
+          {item.hs_code && lookup.data ? (
+            <PassportCalc
+              key={item.id}
+              item={item}
+              info={lookup.data}
+              origin={origin}
+              onOriginChange={setOriginOverride}
+              canWrite={canWrite}
+            />
           ) : null}
 
           <section className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[hsl(var(--card))]">
@@ -238,6 +301,100 @@ function PassportPage() {
         }}
       />
     </AppShell>
+  );
+}
+
+/** v3.1 §6 — lot parameters saved in the passport + live recalculation on today's rates. */
+function PassportCalc({
+  item,
+  info,
+  origin,
+  onOriginChange,
+  canWrite,
+}: {
+  item: CatalogItemOut;
+  info: TnvedCodeInfo;
+  origin: string | null;
+  onOriginChange: (origin: string | null) => void;
+  canWrite: boolean;
+}) {
+  const { t } = useTranslation();
+  const upsert = useUpsertCatalogItem();
+  const [lot, setLot] = useState<LotState>(() => lotFromParams(item.passport?.calc));
+  const [date, setDate] = useState(todayIso());
+  const [focusRemedy, setFocusRemedy] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+
+  const body = useMemo(
+    () =>
+      toCalcIn(lot, {
+        code: item.hs_code ?? "",
+        description: item.description,
+        origin,
+        date: date !== todayIso() ? date : null,
+      }),
+    [lot, item.hs_code, item.description, origin, date],
+  );
+  const calc = useCalc(useDebounce(body, 400));
+
+  async function save() {
+    try {
+      await upsert.mutateAsync({
+        sku: item.sku,
+        description: item.description,
+        hs_code: item.hs_code,
+        passport: {
+          calc: lotToParams(lot, origin),
+          classification: item.passport?.classification ?? null,
+        },
+      });
+      setDirty(false);
+      toast.success(t("passport.paramsSaved"));
+    } catch (err) {
+      toast.error(parseApiError(err).message);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <LotParamsPanel
+        lot={lot}
+        onChange={(next) => {
+          setLot(next);
+          setDirty(true);
+        }}
+        origin={origin}
+        onOriginChange={(o) => {
+          onOriginChange(o);
+          setDirty(true);
+        }}
+        date={date}
+        onDateChange={(d) => setDate(d || todayIso())}
+        info={info}
+        focusRemedy={focusRemedy}
+      />
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <CalcAmounts
+          calc={body ? calc.data : undefined}
+          fetching={calc.isFetching}
+          error={calc.error}
+          hasPrice={Boolean(body)}
+          originMissing={!origin && info.trade_remedies.length > 0}
+          onResolveRemedy={(no) => {
+            setFocusRemedy(no);
+            document.getElementById(`remedy-${no}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
+        {canWrite ? (
+          <div className="flex flex-col gap-2">
+            <Button disabled={!dirty || upsert.isPending} onClick={() => void save()}>
+              {upsert.isPending ? <Loader2 className="animate-spin" /> : <Check />} {t("passport.saveParams")}
+            </Button>
+            <span className="text-[11.5px] leading-snug text-[var(--text-subtle)]">{t("passport.saveParamsHint")}</span>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
