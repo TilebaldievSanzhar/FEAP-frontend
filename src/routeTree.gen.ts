@@ -18,6 +18,7 @@ import { Route as CatalogIndexRouteImport } from './routes/catalog.index'
 import { Route as TnvedTreeRouteImport } from './routes/tnved.tree'
 import { Route as TnvedCodeRouteImport } from './routes/tnved.$code'
 import { Route as ReferenceRemediesRouteImport } from './routes/reference.remedies'
+import { Route as ReferenceDataRouteImport } from './routes/reference.data'
 import { Route as ReferenceAgreementsRouteImport } from './routes/reference.agreements'
 import { Route as NtmVerifyRouteImport } from './routes/ntm.verify'
 import { Route as NtmLookupRouteImport } from './routes/ntm.lookup'
@@ -71,6 +72,11 @@ const TnvedCodeRoute = TnvedCodeRouteImport.update({
 const ReferenceRemediesRoute = ReferenceRemediesRouteImport.update({
   id: '/reference/remedies',
   path: '/reference/remedies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferenceDataRoute = ReferenceDataRouteImport.update({
+  id: '/reference/data',
+  path: '/reference/data',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReferenceAgreementsRoute = ReferenceAgreementsRouteImport.update({
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/ntm/lookup': typeof NtmLookupRoute
   '/ntm/verify': typeof NtmVerifyRoute
   '/reference/agreements': typeof ReferenceAgreementsRoute
+  '/reference/data': typeof ReferenceDataRoute
   '/reference/remedies': typeof ReferenceRemediesRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/ntm/lookup': typeof NtmLookupRoute
   '/ntm/verify': typeof NtmVerifyRoute
   '/reference/agreements': typeof ReferenceAgreementsRoute
+  '/reference/data': typeof ReferenceDataRoute
   '/reference/remedies': typeof ReferenceRemediesRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/ntm/lookup': typeof NtmLookupRoute
   '/ntm/verify': typeof NtmVerifyRoute
   '/reference/agreements': typeof ReferenceAgreementsRoute
+  '/reference/data': typeof ReferenceDataRoute
   '/reference/remedies': typeof ReferenceRemediesRoute
   '/tnved/$code': typeof TnvedCodeRoute
   '/tnved/tree': typeof TnvedTreeRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/ntm/lookup'
     | '/ntm/verify'
     | '/reference/agreements'
+    | '/reference/data'
     | '/reference/remedies'
     | '/tnved/$code'
     | '/tnved/tree'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/ntm/lookup'
     | '/ntm/verify'
     | '/reference/agreements'
+    | '/reference/data'
     | '/reference/remedies'
     | '/tnved/$code'
     | '/tnved/tree'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/ntm/lookup'
     | '/ntm/verify'
     | '/reference/agreements'
+    | '/reference/data'
     | '/reference/remedies'
     | '/tnved/$code'
     | '/tnved/tree'
@@ -255,6 +267,7 @@ export interface RootRouteChildren {
   NtmLookupRoute: typeof NtmLookupRoute
   NtmVerifyRoute: typeof NtmVerifyRoute
   ReferenceAgreementsRoute: typeof ReferenceAgreementsRoute
+  ReferenceDataRoute: typeof ReferenceDataRoute
   ReferenceRemediesRoute: typeof ReferenceRemediesRoute
   TnvedCodeRoute: typeof TnvedCodeRoute
   TnvedTreeRoute: typeof TnvedTreeRoute
@@ -327,6 +340,13 @@ declare module '@tanstack/react-router' {
       path: '/reference/remedies'
       fullPath: '/reference/remedies'
       preLoaderRoute: typeof ReferenceRemediesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reference/data': {
+      id: '/reference/data'
+      path: '/reference/data'
+      fullPath: '/reference/data'
+      preLoaderRoute: typeof ReferenceDataRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reference/agreements': {
@@ -407,6 +427,7 @@ const rootRouteChildren: RootRouteChildren = {
   NtmLookupRoute: NtmLookupRoute,
   NtmVerifyRoute: NtmVerifyRoute,
   ReferenceAgreementsRoute: ReferenceAgreementsRoute,
+  ReferenceDataRoute: ReferenceDataRoute,
   ReferenceRemediesRoute: ReferenceRemediesRoute,
   TnvedCodeRoute: TnvedCodeRoute,
   TnvedTreeRoute: TnvedTreeRoute,

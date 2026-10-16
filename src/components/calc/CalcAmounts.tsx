@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Loader2, ShieldAlert, TriangleAlert } from "
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { FindingRow } from "@/components/dt/FindingRow";
+import { DataProvenance } from "@/components/tariff/DataProvenance";
 import type { CalcOut } from "@/api/calc";
 import { isRemedyKind } from "@/api/dt-types";
 import { parseApiError } from "@/lib/errors";
@@ -141,7 +142,11 @@ export function CalcAmounts({ calc, fetching, error, hasPrice, originMissing, on
                 const jump = parseRemedyMissing(m);
                 return (
                   <li key={i}>
-                    {jump ? t("calc.remedyQuestion", { measure: jump.measureNo }) : m}
+                    {jump
+                      ? jump.kind === "rate"
+                        ? t("calc.remedyRateNeeded", { measure: jump.measureNo })
+                        : t("calc.remedyQuestion", { measure: jump.measureNo })
+                      : m}
                     {jump ? (
                       <button
                         type="button"
@@ -161,6 +166,13 @@ export function CalcAmounts({ calc, fetching, error, hasPrice, originMissing, on
           <div className="border-t border-[var(--border)] px-4 py-2.5 text-[11.5px] text-[var(--text-subtle)]">
             {t("calc.originMissingRemedies")}
           </div>
+        ) : null}
+        {calc.refdata ? (
+          <DataProvenance
+            fx={calc.refdata.fx}
+            datasets={calc.refdata.datasets}
+            className="border-t border-[var(--border)] px-4 py-2.5"
+          />
         ) : null}
       </Card>
 

@@ -264,11 +264,14 @@ export function previewRemedyRate(
  * «Товар 1 (7615101000): антидемпинговая мера AD-32 … (remedy_decisions['AD-32']: …)»
  * → { position: 1, measureNo: "AD-32" } — for the «Решить» jump from the draft.
  */
-export function parseRemedyMissing(line: string): { position: number; measureNo: string } | null {
+export function parseRemedyMissing(
+  line: string,
+): { position: number; measureNo: string; kind: "decision" | "rate" } | null {
   const pos = /^Товар (\d+)\b/.exec(line);
-  const measure = /remedy_decisions\['([^']+)'\]/.exec(line);
+  const measure = /remedy_decisions\['([^']+)'\](\.rate_pct)?/.exec(line);
   if (!pos || !measure) return null;
-  return { position: Number(pos[1]), measureNo: measure[1] };
+  // «.rate_pct» — ставки меры не проверены по тексту решения: нужна ставка вручную.
+  return { position: Number(pos[1]), measureNo: measure[1], kind: measure[2] ? "rate" : "decision" };
 }
 
 // ── Nomenclature chain ──────────────────────────────────────────────────────

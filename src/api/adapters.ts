@@ -146,6 +146,7 @@ export function adaptCodeLookup(r: Schemas["CodeLookupResponse"]): TnvedCodeInfo
     name: r.name,
     chain: [],
     duty_rate: r.duty_rate,
+    duty_info: r.duty_info ?? null,
     vat_rate: r.vat?.rate ?? null,
     excise_rate: r.excise?.applicable ? (r.excise.rate ?? null) : null,
     unit_primary: r.unit_primary,

@@ -199,6 +199,37 @@ describe("TariffSummary", () => {
     expect(screen.getByText("0,4%")).toBeInTheDocument();
     expect(screen.getByText("Нетарифные меры по коду не найдены")).toBeInTheDocument();
   });
+
+  it("explains a temporary ETT rate and a code missing from the current edition", async () => {
+    const base: TnvedCodeInfo = {
+      code: "2823000000",
+      code_formatted: "2823 00 000 0",
+      name: "Оксиды титана",
+      chain: [],
+      duty_rate: "0%",
+      duty_info: {
+        source: "ett_note", version: "2026-08-17", base_rate: "5%", note_id: "123С",
+        valid_to: "2028-10-31", from_decision: "Решения Совета ЕЭК от 9 июля 2026 г. № 76",
+      },
+      vat_rate: "12%",
+      excise_rate: null,
+      vat_conditional: [],
+      trade_remedies: [],
+      customs_fee: null,
+    };
+    const { unmount } = render(withQuery(<TariffSummaryHarness info={base} />));
+    expect(await screen.findByText("временная до 31.10.2028 · прим. 123С) к ЕТТ · базовая 5%")).toBeInTheDocument();
+    expect(screen.getByText("Решения Совета ЕЭК от 9 июля 2026 г. № 76")).toBeInTheDocument();
+    unmount();
+
+    const removed: TnvedCodeInfo = {
+      ...base,
+      duty_rate: "5%",
+      duty_info: { source: "fallback", issue: "код 2519901000 отсутствует в действующей редакции ЕТТ" },
+    };
+    render(withQuery(<TariffSummaryHarness info={removed} />));
+    expect(await screen.findByText("код 2519901000 отсутствует в действующей редакции ЕТТ")).toBeInTheDocument();
+  });
 });
 
 // TariffSummary renders router <Link>s; a memory router keeps them happy.

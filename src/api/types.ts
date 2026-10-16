@@ -97,6 +97,8 @@ export interface TnvedCodeInfo {
   /** Intentionally free-form: backend gives no chain for lookup, so often empty. */
   chain: ClassificationChainStep[];
   duty_rate?: string | null;
+  /** Откуда ставка пошлины: редакция ЕТТ ЕЭК, временная ставка по примечанию. */
+  duty_info?: DutyInfo | null;
   vat_rate?: string | null;
   excise_rate?: string | null;
   unit_primary?: string | null;
@@ -110,6 +112,19 @@ export interface TnvedCodeInfo {
   trade_remedies: TradeRemedy[];
   /** Правило сбора за таможенные операции; null — расчёт сбора отключён. */
   customs_fee?: string | null;
+}
+
+/** Источник ставки пошлины на дату (бэкенд tariff.ett.resolve_duty). */
+export interface DutyInfo {
+  /** ett_base | ett_note | fallback (снимок TWS) */
+  source: string;
+  version?: string | null;
+  base_rate?: string | null;
+  note_id?: string | null;
+  valid_to?: string | null;
+  from_decision?: string | null;
+  /** Ставку нельзя применить: код исключён из действующей редакции ЕТТ. */
+  issue?: string | null;
 }
 
 export interface VatConditional {

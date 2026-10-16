@@ -33,6 +33,8 @@ import {
   type ShipmentIn,
 } from "@/api/dt-types";
 import { useCodeLookups } from "@/api/tnved";
+import { fxFromMeta } from "@/api/refdata";
+import { DataProvenance } from "@/components/tariff/DataProvenance";
 import { countryName, parseRemedyMissing, remedyRateSummary, sumMoney } from "@/lib/tariff";
 import { applyFieldPatch } from "@/lib/shipment-patch";
 import { parseApiError } from "@/lib/errors";
@@ -294,11 +296,24 @@ export function DtDraftTab({
             <GraphCell g="17" label={t("draft.g17")} value={g.header.g17 ?? "—"} mono />
             <GraphCell g="20" label={t("draft.g20")} value={[g.header.g20.incoterms, g.header.g20.place].filter(Boolean).join(" ")} mono err={errorGraphs.has("g20")} />
             <GraphCell g="22" label={t("draft.g22")} value={`${g.header.g22.currency} ${fmtNum(g.header.g22.amount)}`} mono err={errorGraphs.has("g22")} />
-            <GraphCell g="23" label={t("draft.g23")} value={`${g.header.g23.rate ?? "—"} · ${g.header.g23.date}`} mono err={errorGraphs.has("g23")} />
+            <GraphCell
+              g="23"
+              label={t("draft.g23")}
+              value={`${g.header.g23.rate ?? "—"} · ${g.header.g23.date}${
+                g.meta.fx?.[g.header.g22.currency]?.source === "manual" ? ` · ${t("refdata.manualShort")}` : ""
+              }`}
+              mono
+              err={errorGraphs.has("g23")}
+            />
             <GraphCell g="24" label={t("draft.g24")} value={g.header.g24 ?? "—"} mono mute={!g.header.g24} err={errorGraphs.has("g24")} />
             <GraphCell g="25" label={t("draft.g25")} value={g.header.g25 ?? "—"} mono mute={!g.header.g25} err={errorGraphs.has("g25")} />
             <GraphCell g="37" label={t("draft.g37")} value={`${g.header.g37.requested} ${g.header.g37.previous} ${g.header.g37.feature}`} mono />
           </div>
+          <DataProvenance
+            fx={fxFromMeta(g.meta.fx, [g.header.g22.currency, "USD"])}
+            datasets={g.meta.refdata?.datasets ?? []}
+            className="border-t border-[var(--border)] px-4 py-2.5"
+          />
         </div>
 
         {/* Item card */}

@@ -118,7 +118,11 @@ describe("parseRemedyMissing", () => {
     const line =
       "Товар 1 (7615101000): антидемпинговая мера AD-32 «Алюминиевая посуда» (CN) совпадает по коду — " +
       "подтвердите, подпадает ли товар под описание меры (remedy_decisions['AD-32']: applies / not_applicable / exempt)";
-    expect(parseRemedyMissing(line)).toEqual({ position: 1, measureNo: "AD-32" });
+    expect(parseRemedyMissing(line)).toEqual({ position: 1, measureNo: "AD-32", kind: "decision" });
+    const rate =
+      "Товар 2 (8429110090): ставки меры AD-17 не проверены по тексту решения — укажите ставку вручную " +
+      "(remedy_decisions['AD-17'].rate_pct); по разбору реестра ЕЭК: 44.65%";
+    expect(parseRemedyMissing(rate)).toEqual({ position: 2, measureNo: "AD-17", kind: "rate" });
   });
 
   it("ignores other missing parameters", () => {

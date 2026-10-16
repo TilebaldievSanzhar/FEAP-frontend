@@ -6,7 +6,7 @@ import { RemedyBlock } from "@/components/tariff/RemedyBlock";
 import { ConditionalVat } from "@/components/tariff/ConditionalVat";
 import type { TnvedCodeInfo } from "@/api/types";
 import { formatRate } from "@/lib/format";
-import { splitFeeRule } from "@/lib/tariff";
+import { formatIsoDate, splitFeeRule } from "@/lib/tariff";
 import { cn } from "@/lib/utils";
 
 export function RateRow({
@@ -15,12 +15,15 @@ export function RateRow({
   note,
   legal,
   mute,
+  warn,
 }: {
   label: string;
   value: string;
   note?: string | null;
   legal?: string | null;
   mute?: boolean;
+  /** note — предупреждение (ставку нельзя применить). */
+  warn?: boolean;
 }) {
   return (
     <div className="grid grid-cols-[minmax(120px,200px)_1fr] items-baseline gap-4 border-b border-[var(--border)] py-2.5">
@@ -34,7 +37,11 @@ export function RateRow({
         >
           {value}
         </span>
-        {note ? <span className="ml-2.5 text-[12px] text-[var(--text-muted)]">{note}</span> : null}
+        {note ? (
+          <span className={cn("ml-2.5 text-[12px]", warn ? "text-[var(--warn-strong)]" : "text-[var(--text-muted)]")}>
+            {note}
+          </span>
+        ) : null}
         {legal ? <div className="mt-0.5 text-[11px] text-[var(--text-faint)]">{legal}</div> : null}
       </div>
     </div>
@@ -62,7 +69,29 @@ export function TariffSummary({ info, origin, openFirstRemedy, hideNtm }: Props)
 
   return (
     <div>
-      <RateRow label={t("tariff.dutyEtt")} value={formatRate(info.duty_rate)} />
+      <RateRow
+        label={t("tariff.dutyEtt")}
+        value={formatRate(info.duty_rate)}
+        warn={Boolean(info.duty_info?.issue)}
+        note={
+          info.duty_info?.issue
+            ? info.duty_info.issue
+            : info.duty_info?.source === "ett_note"
+              ? t("tariff.dutyTemporary", {
+                  until: info.duty_info.valid_to ? formatIsoDate(info.duty_info.valid_to) : "—",
+                  note: info.duty_info.note_id,
+                  base: info.duty_info.base_rate,
+                })
+              : null
+        }
+        legal={
+          info.duty_info?.source === "ett_note"
+            ? info.duty_info.from_decision
+            : info.duty_info?.version
+              ? t("tariff.dutyEdition", { date: formatIsoDate(info.duty_info.version) })
+              : null
+        }
+      />
       <RateRow
         label={t("tariff.vat")}
         value={formatRate(info.vat_rate)}

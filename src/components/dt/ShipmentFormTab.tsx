@@ -325,6 +325,28 @@ export function ShipmentFormTab({
                 onChange={(e) => set("rate_date", e.target.value || null)}
               />
             </Field>
+            {value.contract_currency && value.contract_currency !== "KGS" ? (
+              <Field
+                label={t("ws.manualRate", { currency: value.contract_currency })}
+                g="23"
+                hint={t("ws.manualRateHint")}
+              >
+                <Input
+                  className="font-mono tabular-nums"
+                  inputMode="decimal"
+                  placeholder="—"
+                  value={value.manual_fx_rates?.[value.contract_currency] ?? ""}
+                  disabled={ro}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(",", ".").replace(/[^\d.]/g, "");
+                    const next = { ...(value.manual_fx_rates ?? {}) };
+                    if (raw && raw !== ".") next[value.contract_currency] = raw;
+                    else delete next[value.contract_currency];
+                    set("manual_fx_rates", next);
+                  }}
+                />
+              </Field>
+            ) : null}
           </div>
         </div>
       </section>

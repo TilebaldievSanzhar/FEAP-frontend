@@ -9,6 +9,7 @@
  */
 
 import type { PassportIn } from "./calc";
+import type { DatasetCheck, FxQuote } from "./refdata";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Auth
@@ -150,6 +151,8 @@ export interface ShipmentIn {
   other_charges: string;
   allocation_method: AllocationMethod;
   rate_date?: string | null;
+  /** Курс вручную (сом за единицу) — только если НБКР не подтвердил курс на дату ДТ. */
+  manual_fx_rates?: Record<string, string>;
   transport_at_border_type?: string | null;
   transport_ids?: string | null;
   container?: boolean | null;
@@ -303,6 +306,14 @@ export interface Graphs {
     generated_at: string;
     vat_base_includes_remedies?: boolean;
     fee_mode?: "percent" | "fixed" | "off";
+    /** Курсы на день: валюта → источник и когда получен (refsync). */
+    fx?: Record<string, FxQuote>;
+    refdata?: {
+      datasets?: DatasetCheck[];
+      blocking?: string[];
+      attestation_warning?: string | null;
+      guard_mode?: "enforce" | "warn";
+    };
   };
   header: {
     g01: { direction: string; procedure: string; form: string };

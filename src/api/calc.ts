@@ -9,6 +9,7 @@ import { ApiError, apiFetch } from "./client";
 import { getAuthToken } from "./auth";
 import type { DraftStatus, Finding, Incoterms, PaymentLine, RemedyDecision } from "./dt-types";
 import type { ClassificationChainStep } from "./types";
+import type { Refdata } from "./refdata";
 
 export type CostKind = "logistics" | "broker" | "warehouse" | "certification" | "bank" | "other";
 
@@ -88,6 +89,8 @@ export interface CalcOut {
   landed_cost: LandedCost | null;
   findings: Finding[];
   missing_parameters: string[];
+  /** Источник и дата сверки: курсы на день и гарантии справочников. */
+  refdata?: Refdata;
 }
 
 export interface ClassificationNote {
